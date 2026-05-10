@@ -36,6 +36,9 @@ export type ProfileData = {
   role: Role;
   avatarUrl?: string;
   email?: string;
+  githubUrl?: string;
+  linkedinUrl?: string;
+  resumeUrl?: string;
 };
 
 type AuthState = {
@@ -48,6 +51,7 @@ type AuthState = {
   setProfile: (profile: ProfileData | null) => void;
   setRole: (role: Role) => Promise<void>;
   initializeProfile: (user: User) => Promise<void>;
+  updateProfile: (data: Partial<ProfileData>) => Promise<void>;
 };
 
 export const useAuthStore = create<AuthState>((set, get) => ({
@@ -69,6 +73,20 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       await setDoc(docRef, { role: newRole, updatedAt: new Date().toISOString() }, { merge: true });
     } catch (error) {
       console.error("Failed to update role in Firestore:", error);
+    }
+  },
+  updateProfile: async (data: Partial<ProfileData>) => {
+    const { user, profile } = get();
+    if (!user || !profile) return;
+
+    const newProfile = { ...profile, ...data };
+    set({ profile: newProfile });
+
+    try {
+      const docRef = doc(db, "profiles", user.uid);
+      await setDoc(docRef, { ...data, updatedAt: new Date().toISOString() }, { merge: true });
+    } catch (error) {
+      console.error("Failed to update profile in Firestore:", error);
     }
   },
   initializeProfile: async (user: User) => {

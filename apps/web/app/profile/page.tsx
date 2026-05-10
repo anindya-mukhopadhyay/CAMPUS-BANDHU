@@ -1,9 +1,11 @@
 "use client";
 
+import { useState } from "react";
+
 import { motion } from "framer-motion";
 import {
   MapPin, Mail, Calendar, BookOpen, Award, Star,
-  Edit3
+  Edit3, Github, Linkedin, ExternalLink
 } from "lucide-react";
 
 import { AppShell } from "@/components/layout/AppShell";
@@ -11,6 +13,8 @@ import { GlassCard } from "@/components/ui/glass-card";
 import { NeonBadge } from "@/components/ui/neon-badge";
 import { AnimatedCounter } from "@/components/ui/animated-counter";
 import { Avatar } from "@/components/ui/avatar";
+import { Modal } from "@/components/ui/modal";
+import { Input } from "@/components/ui/input";
 import { useAuthStore, ROLE_LABELS, ROLE_COLORS } from "@/lib/stores/useAuthStore";
 
 const achievements = [
@@ -44,7 +48,19 @@ const stagger = {
 };
 
 export default function ProfilePage() {
-  const { profile, role, user } = useAuthStore();
+  const { profile, role, user, updateProfile } = useAuthStore();
+  const [isEditing, setIsEditing] = useState(false);
+  const [editData, setEditData] = useState({
+    bio: profile?.bio || "",
+    githubUrl: profile?.githubUrl || "",
+    linkedinUrl: profile?.linkedinUrl || "",
+    resumeUrl: profile?.resumeUrl || "",
+  });
+
+  const handleSave = () => {
+    setIsEditing(false);
+    updateProfile(editData);
+  };
 
   return (
     <AppShell>
@@ -77,7 +93,18 @@ export default function ProfilePage() {
                     </div>
                   </div>
                 </div>
-                <button className="flex items-center gap-2 rounded-xl bg-white/[0.06] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-white/10">
+                <button 
+                  onClick={() => {
+                    setEditData({
+                      bio: profile?.bio || "",
+                      githubUrl: profile?.githubUrl || "",
+                      linkedinUrl: profile?.linkedinUrl || "",
+                      resumeUrl: profile?.resumeUrl || "",
+                    });
+                    setIsEditing(true);
+                  }}
+                  className="flex items-center gap-2 rounded-xl bg-white/[0.06] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-white/10"
+                >
                   <Edit3 className="h-4 w-4" /> Edit Profile
                 </button>
               </div>
@@ -173,7 +200,109 @@ export default function ProfilePage() {
             </GlassCard>
           </motion.div>
         </div>
+
+        {/* Connected Accounts */}
+        <motion.div variants={stagger.item}>
+          <GlassCard>
+            <h3 className="mb-4 font-heading text-lg font-semibold flex items-center gap-2">
+              <ExternalLink className="h-5 w-5 text-accent" /> Connected Accounts
+            </h3>
+            <div className="grid gap-4 sm:grid-cols-2">
+              {/* GitHub */}
+              <div className="flex items-center justify-between rounded-xl bg-white/[0.02] border border-white/[0.06] p-4 transition-colors hover:bg-white/[0.04]">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#24292e]">
+                    <Github className="h-5 w-5 text-white" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold">GitHub</p>
+                    <p className="text-xs text-slate">{profile?.githubUrl ? "Connected" : "Not connected"}</p>
+                  </div>
+                </div>
+                {profile?.githubUrl ? (
+                  <a href={profile.githubUrl} target="_blank" rel="noreferrer" className="rounded-lg bg-white/[0.06] px-4 py-1.5 text-xs font-medium transition-colors hover:bg-white/10 hover:text-white">
+                    View
+                  </a>
+                ) : (
+                  <button onClick={() => setIsEditing(true)} className="rounded-lg bg-white/[0.06] px-4 py-1.5 text-xs font-medium transition-colors hover:bg-white/10 hover:text-white">
+                    Connect
+                  </button>
+                )}
+              </div>
+
+              {/* LinkedIn */}
+              <div className="flex items-center justify-between rounded-xl bg-white/[0.02] border border-white/[0.06] p-4 transition-colors hover:bg-white/[0.04]">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#0077b5]">
+                    <Linkedin className="h-5 w-5 text-white" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold">LinkedIn</p>
+                    <p className="text-xs text-mint">{profile?.linkedinUrl ? "Connected" : "Not connected"}</p>
+                  </div>
+                </div>
+                {profile?.linkedinUrl ? (
+                  <a href={profile.linkedinUrl} target="_blank" rel="noreferrer" className="rounded-lg bg-mint/10 px-4 py-1.5 text-xs font-medium text-mint transition-colors hover:bg-mint/20">
+                    View
+                  </a>
+                ) : (
+                  <button onClick={() => setIsEditing(true)} className="rounded-lg bg-white/[0.06] px-4 py-1.5 text-xs font-medium transition-colors hover:bg-white/10 hover:text-white">
+                    Connect
+                  </button>
+                )}
+              </div>
+            </div>
+          </GlassCard>
+        </motion.div>
       </motion.div>
+
+      {/* Edit Profile Modal */}
+      <Modal open={isEditing} onClose={() => setIsEditing(false)} title="Edit Profile">
+        <div className="space-y-4">
+          <div>
+            <label className="text-xs text-slate mb-1 block">Bio</label>
+            <textarea
+              value={editData.bio}
+              onChange={(e) => setEditData({ ...editData, bio: e.target.value })}
+              className="w-full rounded-xl border border-white/[0.06] bg-white/[0.02] p-3 text-sm text-white placeholder:text-subtle focus:border-accent/50 focus:outline-none min-h-[100px]"
+              placeholder="Tell us about yourself..."
+            />
+          </div>
+          <div>
+            <label className="text-xs text-slate mb-1 block">Resume URL</label>
+            <Input 
+              type="url"
+              placeholder="https://drive.google.com/..." 
+              value={editData.resumeUrl}
+              onChange={(e) => setEditData({ ...editData, resumeUrl: e.target.value })}
+            />
+          </div>
+          <div>
+            <label className="text-xs text-slate mb-1 block">GitHub URL</label>
+            <Input 
+              type="url"
+              placeholder="https://github.com/username" 
+              value={editData.githubUrl}
+              onChange={(e) => setEditData({ ...editData, githubUrl: e.target.value })}
+            />
+          </div>
+          <div>
+            <label className="text-xs text-slate mb-1 block">LinkedIn URL</label>
+            <Input 
+              type="url"
+              placeholder="https://linkedin.com/in/username" 
+              value={editData.linkedinUrl}
+              onChange={(e) => setEditData({ ...editData, linkedinUrl: e.target.value })}
+            />
+          </div>
+          <button 
+            onClick={handleSave}
+            className="w-full mt-2 rounded-xl bg-gradient-to-r from-mint to-accent py-3 text-sm font-semibold text-white shadow-[0_0_20px_rgba(56,242,181,0.2)] transition-shadow hover:shadow-[0_0_30px_rgba(56,242,181,0.3)]"
+          >
+            Save Changes
+          </button>
+        </div>
+      </Modal>
     </AppShell>
   );
 }

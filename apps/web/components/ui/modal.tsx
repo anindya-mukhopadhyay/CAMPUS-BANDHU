@@ -61,12 +61,12 @@ export function Modal({ open, onClose, children, title, size = "md", className }
 
           {/* Modal */}
           <motion.div
-            initial={{ opacity: 0, scale: 0.95, y: 20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: 20 }}
+            initial={{ opacity: 0, scale: 0.95, x: "-50%", y: "-45%" }}
+            animate={{ opacity: 1, scale: 1, x: "-50%", y: "-50%" }}
+            exit={{ opacity: 0, scale: 0.95, x: "-50%", y: "-45%" }}
             transition={{ duration: 0.3, ease: [0.34, 1.56, 0.64, 1] }}
             className={cn(
-              "fixed left-1/2 top-1/2 z-50 w-[calc(100%-2rem)] -translate-x-1/2 -translate-y-1/2",
+              "fixed left-1/2 top-1/2 z-50 w-[calc(100%-2rem)] max-h-[calc(100dvh-4rem)] overflow-y-auto",
               "glass-strong rounded-3xl p-6 shadow-float",
               sizeMap[size],
               className
