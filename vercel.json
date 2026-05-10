@@ -1,0 +1,6 @@
+{
+  "framework": "nextjs",
+  "buildCommand": "pnpm --filter @campus-bandhu/web build",
+  "installCommand": "pnpm install",
+  "outputDirectory": "apps/web/.next"
+}

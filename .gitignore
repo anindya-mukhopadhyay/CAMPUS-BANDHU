@@ -1,0 +1,40 @@
+# dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# local env
+.env
+.env.local
+.env.*.local
+campus-bandhu-firebase-adminsdk-*.json
+
+# build output
+dist/
+.next/
+out/
+coverage/
+
+# logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# system
+.DS_Store
+
+# python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# solidity
+artifacts/
+cache/
+
+# IDE
+.vscode/
+.idea/

@@ -1,0 +1,29 @@
+{
+  "name": "campus-bandhu",
+  "version": "1.0.0",
+  "private": true,
+  "packageManager": "pnpm@10.10.0",
+  "scripts": {
+    "dev": "corepack pnpm -r --parallel dev",
+    "dev:web": "corepack pnpm --filter @campus-bandhu/web dev",
+    "dev:api": "corepack pnpm --filter @campus-bandhu/api dev",
+    "dev:ai": "corepack pnpm --filter @campus-bandhu/ai dev",
+    "build": "corepack pnpm -r build",
+    "lint": "corepack pnpm -r lint",
+    "typecheck": "corepack pnpm -r typecheck",
+    "test": "corepack pnpm -r test",
+    "format": "prettier --write .",
+    "db:seed": "corepack pnpm dlx tsx apps/api/scripts/seed.ts"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.1",
+    "@types/node": "^22.15.18",
+    "eslint": "^9.26.0",
+    "eslint-config-prettier": "^10.1.2",
+    "globals": "^16.5.0",
+    "prettier": "^3.5.3",
+    "turbo": "^2.5.3",
+    "typescript-eslint": "^8.46.2",
+    "typescript": "^5.8.3"
+  }
+}

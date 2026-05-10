@@ -1,0 +1,12 @@
+{
+  "name": "@campus-bandhu/ai",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "./venv/bin/uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload",
+    "build": "echo 'Python service build handled via Docker/pip'",
+    "lint": "echo 'No Python lint configured yet'",
+    "typecheck": "echo 'No Python typecheck configured yet'",
+    "test": "echo 'No AI tests configured yet'"
+  }
+}

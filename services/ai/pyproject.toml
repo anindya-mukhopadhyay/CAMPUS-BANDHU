@@ -1,0 +1,19 @@
+[project]
+name = "campus-bandhu-ai"
+version = "1.0.0"
+description = "AI services for CAMPUS-BANDHU"
+requires-python = ">=3.11"
+dependencies = [
+  "fastapi==0.115.12",
+  "uvicorn[standard]==0.34.2",
+  "pydantic==2.11.4",
+  "pydantic-settings==2.9.1",
+  "numpy==2.2.5",
+  "scikit-learn==1.6.1",
+  "sentence-transformers==4.1.0",
+  "openai==1.79.0",
+  "httpx==0.28.1"
+]
+
+[tool.uv]
+dev-dependencies = []

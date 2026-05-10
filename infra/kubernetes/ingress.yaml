@@ -1,0 +1,39 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: campus-bandhu-ingress
+  namespace: campus-bandhu
+  annotations:
+    kubernetes.io/ingress.class: nginx
+spec:
+  rules:
+    - host: app.campus-bandhu.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: campus-web
+                port:
+                  number: 3000
+    - host: api.campus-bandhu.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: campus-api
+                port:
+                  number: 8080
+    - host: ai.campus-bandhu.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: campus-ai
+                port:
+                  number: 8000

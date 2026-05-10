@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: campus-ai
+  namespace: campus-bandhu
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: campus-ai
+  template:
+    metadata:
+      labels:
+        app: campus-ai
+    spec:
+      containers:
+        - name: ai
+          image: ghcr.io/your-org/campus-bandhu-ai:latest
+          ports:
+            - containerPort: 8000
+          env:
+            - name: OPENAI_BASE_URL
+              value: "https://api.openai.com/v1"
+            - name: EMBEDDING_MODEL
+              value: "text-embedding-3-small"
+            - name: SENTENCE_MODEL
+              value: "sentence-transformers/all-MiniLM-L6-v2"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: campus-ai
+  namespace: campus-bandhu
+spec:
+  type: ClusterIP
+  selector:
+    app: campus-ai
+  ports:
+    - port: 8000
+      targetPort: 8000
