@@ -1,7 +1,7 @@
 import { getApp, getApps, initializeApp } from "firebase/app";
 import { getAnalytics, isSupported as analyticsSupported } from "firebase/analytics";
 import { getAuth } from "firebase/auth";
-import { getFirestore, enableIndexedDbPersistence, CACHE_SIZE_UNLIMITED } from "firebase/firestore";
+import { getFirestore, enableIndexedDbPersistence } from "firebase/firestore";
 import { getMessaging, isSupported as messagingSupported } from "firebase/messaging";
 import { getStorage } from "firebase/storage";
 

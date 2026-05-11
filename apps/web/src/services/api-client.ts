@@ -19,6 +19,11 @@ apiClient.interceptors.request.use(async (config: InternalAxiosRequestConfig) =>
     if (config.headers) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+  } else if (process.env.NODE_ENV === "development") {
+    // Fallback for Mock Login in development
+    if (config.headers) {
+      config.headers.Authorization = `Bearer mock-token`;
+    }
   }
   return config;
 }, (error: AxiosError) => {

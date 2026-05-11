@@ -18,6 +18,16 @@ export async function requireAuth(request: Request, response: Response, next: Ne
     return;
   }
 
+  // Development-only: Allow mock token for easier testing
+  if (process.env.NODE_ENV === "development" && token === "mock-token") {
+    request.user = {
+      uid: "mock-uid",
+      email: "mock@example.com",
+      role: "student",
+    } as any;
+    return next();
+  }
+
   try {
     request.user = await firebaseAuth.verifyIdToken(token, true);
     next();
