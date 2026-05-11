@@ -3,7 +3,7 @@ import { StatusCodes } from "http-status-codes";
 import { z } from "zod";
 
 import { firestore } from "../config/firebase-admin";
-import { HttpError } from "../lib/http-error";
+import { HttpError } from "../utils/http-error";
 
 const eventSchema = z.object({
   title: z.string().min(3),

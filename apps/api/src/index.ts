@@ -3,7 +3,7 @@ import { createServer } from "http";
 import { createApp } from "./app";
 import { env } from "./config/env";
 import { logger } from "./config/logger";
-import { createSocketServer } from "./socket/server";
+import { createSocketServer } from "./sockets/server";
 
 const app = createApp();
 const httpServer = createServer(app);

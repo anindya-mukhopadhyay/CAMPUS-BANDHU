@@ -35,3 +35,30 @@ export async function markListingSold(id: string): Promise<Record<string, unknow
   await docRef.update({ status: "sold", updatedAt: new Date().toISOString() });
   return { id, status: "sold" };
 }
+
+export async function updateListing(id: string, payload: Partial<z.infer<typeof listingSchema>>, sellerId: string): Promise<Record<string, unknown>> {
+  const docRef = listingsRef.doc(id);
+  const doc = await docRef.get();
+  
+  if (!doc.exists) throw new Error("Listing not found");
+  if (doc.data()?.sellerId !== sellerId) throw new Error("Unauthorized to update this listing");
+
+  const updateData = {
+    ...payload,
+    updatedAt: new Date().toISOString()
+  };
+
+  await docRef.update(updateData);
+  return { id, ...doc.data(), ...updateData };
+}
+
+export async function deleteListing(id: string, sellerId: string): Promise<void> {
+  const docRef = listingsRef.doc(id);
+  const doc = await docRef.get();
+  
+  if (!doc.exists) throw new Error("Listing not found");
+  if (doc.data()?.sellerId !== sellerId) throw new Error("Unauthorized to delete this listing");
+
+  await docRef.delete();
+}
+

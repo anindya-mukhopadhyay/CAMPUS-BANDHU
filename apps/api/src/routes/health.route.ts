@@ -1,6 +1,6 @@
 import { Router } from "express";
 
-import { apiOk } from "../lib/api-response";
+import { apiOk } from "../utils/api-response";
 
 export const healthRouter = Router();
 

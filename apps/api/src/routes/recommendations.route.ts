@@ -1,7 +1,7 @@
 import { Router } from "express";
 
-import { asyncHandler } from "../lib/async-handler";
-import { apiOk } from "../lib/api-response";
+import { asyncHandler } from "../utils/async-handler";
+import { apiOk } from "../utils/api-response";
 import { requireAuth } from "../middleware/auth";
 import { getPersonalizedRecommendations } from "../services/recommendations.service";
 

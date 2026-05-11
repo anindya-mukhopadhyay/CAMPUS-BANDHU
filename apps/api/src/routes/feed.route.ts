@@ -1,8 +1,8 @@
 import { Router } from "express";
 
-import { asyncHandler } from "../lib/async-handler";
-import { apiOk } from "../lib/api-response";
-import { emitRealtime } from "../lib/socket";
+import { asyncHandler } from "../utils/async-handler";
+import { apiOk } from "../utils/api-response";
+import { emitRealtime } from "../utils/socket";
 import { requireAuth } from "../middleware/auth";
 import { createFeedPost, likePost, listFeedPosts } from "../services/feed.service";
 

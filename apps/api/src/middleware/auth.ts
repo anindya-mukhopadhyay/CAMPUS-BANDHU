@@ -40,7 +40,7 @@ export function requireRole(...allowedRoles: string[]) {
     }
 
     try {
-      const profileDoc = await firestore.collection("profiles").doc(userId).get();
+      const profileDoc = await firestore.collection("users").doc(userId).get();
       const role = profileDoc.exists ? (profileDoc.data()?.role as string) : "student";
 
       if (!allowedRoles.includes(role)) {
@@ -53,7 +53,7 @@ export function requireRole(...allowedRoles: string[]) {
       // Attach role to request for downstream use
       (request as any).userRole = role;
       next();
-    } catch (error) {
+    } catch {
       response.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ message: "Failed to verify role" });
     }
   };

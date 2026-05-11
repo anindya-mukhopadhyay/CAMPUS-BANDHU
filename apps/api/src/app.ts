@@ -12,9 +12,12 @@ import { eventsRouter } from "./routes/events.route";
 import { feedRouter } from "./routes/feed.route";
 import { healthRouter } from "./routes/health.route";
 import { marketplaceRouter } from "./routes/marketplace.route";
-import { profilesRouter } from "./routes/profiles.route";
+import { usersRouter } from "./routes/users.route";
 import { recruitersRouter } from "./routes/recruiters.route";
 import { recommendationsRouter } from "./routes/recommendations.route";
+import { authRouter } from "./routes/auth.route";
+import { chatRouter } from "./routes/chat.route";
+import { adminRouter } from "./routes/admin.route";
 
 export function createApp(): express.Express {
   const app = express();
@@ -50,10 +53,13 @@ export function createApp(): express.Express {
   });
 
   app.use("/api/v1", healthRouter);
+  app.use("/api/v1/auth", authRouter);
   app.use("/api/v1", eventsRouter);
   app.use("/api/v1", feedRouter);
   app.use("/api/v1", marketplaceRouter);
-  app.use("/api/v1", profilesRouter);
+  app.use("/api/v1/users", usersRouter);
+  app.use("/api/v1/chat", chatRouter);
+  app.use("/api/v1/admin", adminRouter);
   app.use("/api/v1", recruitersRouter);
   app.use("/api/v1", recommendationsRouter);
   app.use("/api/v1", achievementsRouter);
