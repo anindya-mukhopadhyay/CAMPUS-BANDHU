@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import {
   Users, UserPlus, MessageCircle, Heart, MessageSquare,
@@ -12,33 +12,8 @@ import { GlassCard } from "@/components/ui/glass-card";
 import { NeonBadge } from "@/components/ui/neon-badge";
 import { Avatar } from "@/components/ui/avatar";
 import { AnimatedCounter } from "@/components/ui/animated-counter";
-
-const feedPosts = [
-  {
-    id: "1", author: "Arjun Mehta", role: "student", dept: "CSE",
-    content: "Just submitted my project for the Campus Hackathon 2024! Building an AI-powered study planner 🚀 Team CodeCrafters let's go! #hackathon #ai",
-    likes: 42, comments: 8, shares: 3, time: "2h ago",
-    reactions: ["🔥", "💪", "🎯"]
-  },
-  {
-    id: "2", author: "Dr. Vikram Singh", role: "faculty", dept: "CSE",
-    content: "Excited to announce our new elective on 'Generative AI & LLM Applications' starting next semester. Limited seats — register early!",
-    likes: 89, comments: 15, shares: 12, time: "5h ago",
-    reactions: ["🙌", "📚", "⭐"]
-  },
-  {
-    id: "3", author: "Tech Club NSUT", role: "organizer", dept: "Club",
-    content: "Registrations for the Cybersecurity CTF are now OPEN! 🏴‍☠️ Top 3 teams win cash prizes + internship referrals. Link in bio.",
-    likes: 156, comments: 23, shares: 45, time: "1d ago",
-    reactions: ["🔥", "🏆", "💻"]
-  },
-  {
-    id: "4", author: "Sneha Patel", role: "student", dept: "CSE",
-    content: "Just earned the 'Hackathon Hero' badge after participating in 5 hackathons this semester! The gamification on Campus-Bandhu really motivates me 💪",
-    likes: 67, comments: 12, shares: 5, time: "1d ago",
-    reactions: ["🏆", "👏", "🎉"]
-  },
-];
+import { feedService } from "@/services";
+import { useAuthStore } from "@/lib/stores/useAuthStore";
 
 const suggestedConnections = [
   { name: "Ravi Gupta", dept: "CSE", mutualFriends: 12, skills: ["React", "Python"] },
@@ -62,6 +37,46 @@ const stagger = {
 
 export default function NetworkPage() {
   const [postContent, setPostContent] = useState("");
+  const [posts, setPosts] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const { profile } = useAuthStore();
+
+  const fetchPosts = async () => {
+    try {
+      const res = await feedService.getAll();
+      setPosts(res.data || []);
+    } catch (err) {
+      console.error("Failed to load feed posts:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchPosts();
+  }, []);
+
+  const handlePostSubmit = async () => {
+    if (!postContent.trim()) return;
+    try {
+      await feedService.create(postContent);
+      setPostContent("");
+      await fetchPosts();
+    } catch (err) {
+      console.error("Failed to create post:", err);
+    }
+  };
+
+  const handleLike = async (postId: string) => {
+    try {
+      await feedService.like(postId);
+      setPosts(prev =>
+        prev.map(p => (p.id === postId ? { ...p, likes: (p.likes || 0) + 1 } : p))
+      );
+    } catch (err) {
+      console.error("Failed to like post:", err);
+    }
+  };
 
   return (
     <AppShell>
@@ -78,7 +93,7 @@ export default function NetworkPage() {
             <motion.div variants={stagger.item}>
               <GlassCard>
                 <div className="flex gap-3">
-                  <Avatar name="You" size="md" status="online" />
+                  <Avatar name={profile?.fullName || "You"} size="md" status="online" />
                   <div className="flex-1">
                     <textarea
                       value={postContent}
@@ -96,7 +111,10 @@ export default function NetworkPage() {
                           <Sparkles className="h-4 w-4" />
                         </button>
                       </div>
-                      <button className="flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-accent to-electric px-4 py-2 text-xs font-semibold text-white shadow-glow-sm">
+                      <button
+                        onClick={handlePostSubmit}
+                        className="flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-accent to-electric px-4 py-2 text-xs font-semibold text-white shadow-glow-sm"
+                      >
                         <Send className="h-3.5 w-3.5" /> Post
                       </button>
                     </div>
@@ -105,34 +123,44 @@ export default function NetworkPage() {
               </GlassCard>
             </motion.div>
 
+            {/* Feed Loading/State */}
+            {loading && (
+              <p className="text-sm text-slate italic text-center py-4">Syncing network feed...</p>
+            )}
+
+            {!loading && posts.length === 0 && (
+              <p className="text-sm text-slate italic text-center py-4">No campus updates yet. Be the first to share!</p>
+            )}
+
             {/* Feed */}
-            {feedPosts.map((post) => (
+            {posts.map((post) => (
               <motion.div key={post.id} variants={stagger.item}>
                 <GlassCard hover>
                   <div className="flex items-start gap-3">
-                    <Avatar name={post.author} size="md" />
+                    <Avatar name={post.authorName} size="md" />
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2">
-                        <span className="font-semibold">{post.author}</span>
+                        <span className="font-semibold">{post.authorName}</span>
                         <NeonBadge color={
-                          post.role === "faculty" ? "cyan" :
-                          post.role === "organizer" ? "blaze" : "blue"
-                        } size="sm">{post.role}</NeonBadge>
-                        <span className="text-xs text-slate">· {post.time}</span>
+                          post.authorRole === "faculty" ? "cyan" :
+                          post.authorRole === "organizer" ? "blaze" : "blue"
+                        } size="sm">{post.authorRole || "student"}</NeonBadge>
+                        <span className="text-xs text-slate">· {new Date(post.createdAt).toLocaleDateString()}</span>
                       </div>
                       <p className="mt-2 text-sm leading-relaxed">{post.content}</p>
 
                       {/* Reactions */}
                       <div className="mt-3 flex items-center gap-1">
-                        {post.reactions.map((r, i) => (
-                          <span key={i} className="text-sm">{r}</span>
-                        ))}
+                        <span className="text-sm">🔥</span>
                         <span className="ml-1 text-xs text-slate"><AnimatedCounter value={post.likes} /></span>
                       </div>
 
                       {/* Actions */}
                       <div className="mt-3 flex items-center gap-1 border-t border-white/[0.04] pt-3">
-                        <button className="flex flex-1 items-center justify-center gap-1.5 rounded-lg py-2 text-xs text-slate transition-colors hover:bg-white/[0.04] hover:text-rose">
+                        <button
+                          onClick={() => handleLike(post.id)}
+                          className="flex flex-1 items-center justify-center gap-1.5 rounded-lg py-2 text-xs text-slate transition-colors hover:bg-white/[0.04] hover:text-rose"
+                        >
                           <Heart className="h-4 w-4" /> Like
                         </button>
                         <button className="flex flex-1 items-center justify-center gap-1.5 rounded-lg py-2 text-xs text-slate transition-colors hover:bg-white/[0.04] hover:text-accent">
@@ -154,7 +182,7 @@ export default function NetworkPage() {
             {/* Suggested Connections */}
             <motion.div variants={stagger.item}>
               <GlassCard>
-                <h3 className="mb-4 font-heading text-base font-semibold flex items-center gap-2">
+                <h3 className="mb-4 font-heading text-base font-semibold flex items-center gap-2 text-white">
                   <Users className="h-4 w-4 text-accent" /> Suggested Connections
                 </h3>
                 <div className="space-y-3">
@@ -177,7 +205,7 @@ export default function NetworkPage() {
             {/* Clubs */}
             <motion.div variants={stagger.item}>
               <GlassCard>
-                <h3 className="mb-4 font-heading text-base font-semibold flex items-center gap-2">
+                <h3 className="mb-4 font-heading text-base font-semibold flex items-center gap-2 text-white">
                   <MessageCircle className="h-4 w-4 text-purple" /> Campus Clubs
                 </h3>
                 <div className="space-y-2">

@@ -78,7 +78,8 @@ export function HeroSection() {
 
           <p
             ref={subtitleRef}
-            className="mt-5 max-w-2xl text-sm leading-relaxed text-slate md:text-base"
+            className="mt-5 max-w-2xl text-sm leading-relaxed text-white md:text-base"
+            style={{ color: "#ffffff" }}
           >
             CAMPUS-BANDHU unifies verified profiles, live engagement, marketplace,
             and recruiter signals into an AI-driven operating system with real-time personalization.

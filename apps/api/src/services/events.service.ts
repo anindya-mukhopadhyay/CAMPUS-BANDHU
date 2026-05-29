@@ -1,105 +1,81 @@
-import { Timestamp } from "firebase-admin/firestore";
 import { StatusCodes } from "http-status-codes";
+import mongoose from "mongoose";
 import { z } from "zod";
 
-import { firestore } from "../config/firebase-admin";
+import EventModel from "../models/event.model";
 import { HttpError } from "../utils/http-error";
 
 const eventSchema = z.object({
   title: z.string().min(3),
   description: z.string().min(10),
   category: z.string().min(2),
-  startAt: z.string().datetime(),
-  endAt: z.string().datetime(),
-  venue: z.string().min(2),
-  tags: z.array(z.string()).default([])
+  startAt: z.string().datetime().optional(),
+  endAt: z.string().datetime().optional(),
+  venue: z.string().min(2).optional(),
+  tags: z.array(z.string()).default([]),
+  
+  // Compatibility fields
+  date: z.string().optional(),
+  time: z.string().optional(),
+  location: z.string().optional(),
+  maxAttendees: z.number().optional(),
+  image: z.string().optional(),
+  imageUrl: z.string().optional(),
+  id: z.string().optional()
 });
 
 export type CreateEventInput = z.infer<typeof eventSchema>;
 
-const eventsRef = firestore.collection("events");
-
-function normalizeTimestamp(value: unknown): string {
-  if (value instanceof Timestamp) {
-    return value.toDate().toISOString();
-  }
-
-  if (typeof value === "string") {
-    return value;
-  }
-
-  return new Date().toISOString();
-}
-
 export async function listEvents(): Promise<Record<string, unknown>[]> {
-  const snapshot = await eventsRef.orderBy("startAt", "asc").limit(50).get();
-  return snapshot.docs.map((doc) => {
-    const data = doc.data();
-    return {
-      id: doc.id,
-      ...data,
-      startAt: normalizeTimestamp(data.startAt),
-      endAt: normalizeTimestamp(data.endAt)
-    };
-  });
+  const events = await EventModel.find({}).sort({ startAt: 1 }).limit(50);
+  return events.map((doc) => doc.toJSON()) as any;
 }
 
 export async function getEventById(id: string): Promise<Record<string, unknown>> {
-  const doc = await eventsRef.doc(id).get();
-  if (!doc.exists) {
+  const event = await EventModel.findById(id);
+  if (!event) {
     throw new HttpError(StatusCodes.NOT_FOUND, "Event not found");
   }
-
-  const data = doc.data() ?? {};
-
-  return {
-    id: doc.id,
-    ...data,
-    startAt: normalizeTimestamp(data.startAt),
-    endAt: normalizeTimestamp(data.endAt)
-  };
+  return event.toJSON() as any;
 }
 
 export async function createEvent(payload: CreateEventInput, organizerId: string): Promise<Record<string, unknown>> {
   const parsed = eventSchema.parse(payload);
-  const now = new Date().toISOString();
+  
+  const eventId = parsed.id || new mongoose.Types.ObjectId().toString();
+  
   const document = {
+    _id: eventId,
     ...parsed,
     organizerId,
     registrations: 0,
-    createdAt: now,
-    updatedAt: now
+    registeredStudentIds: []
   };
 
-  const created = await eventsRef.add(document);
-  return { id: created.id, ...document };
+  const created = await EventModel.create(document);
+  return created.toJSON() as any;
 }
 
 export async function registerForEvent(eventId: string, studentId: string): Promise<Record<string, unknown>> {
-  const eventDoc = eventsRef.doc(eventId);
+  const event = await EventModel.findById(eventId);
+  if (!event) {
+    throw new HttpError(StatusCodes.NOT_FOUND, "Event not found");
+  }
 
-  await firestore.runTransaction(async (transaction) => {
-    const eventSnapshot = await transaction.get(eventDoc);
-    if (!eventSnapshot.exists) {
-      throw new HttpError(StatusCodes.NOT_FOUND, "Event not found");
-    }
+  // Atomically check and add student registration
+  const updatedEvent = await EventModel.findOneAndUpdate(
+    { _id: eventId, registeredStudentIds: { $ne: studentId } },
+    { 
+      $addToSet: { registeredStudentIds: studentId },
+      $inc: { registrations: 1, attendees: 1 }
+    },
+    { new: true }
+  );
 
-    const registrationRef = eventDoc.collection("registrations").doc(studentId);
-    const existingRegistration = await transaction.get(registrationRef);
-
-    if (!existingRegistration.exists) {
-      transaction.set(registrationRef, {
-        studentId,
-        registeredAt: new Date().toISOString()
-      });
-
-      const current = (eventSnapshot.get("registrations") as number | undefined) ?? 0;
-      transaction.update(eventDoc, {
-        registrations: current + 1,
-        updatedAt: new Date().toISOString()
-      });
-    }
-  });
+  // If updatedEvent is null, it means the student was already registered
+  if (!updatedEvent) {
+    return { eventId, studentId, status: "already_registered" };
+  }
 
   return { eventId, studentId, status: "registered" };
 }

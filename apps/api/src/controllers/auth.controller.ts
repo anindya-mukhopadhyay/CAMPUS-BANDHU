@@ -1,7 +1,8 @@
 import type { Request, Response } from "express";
 import { StatusCodes } from "http-status-codes";
 
-import { firestore, firebaseAuth } from "../config/firebase-admin";
+import { firebaseAuth } from "../config/firebase-admin";
+import { UserModel } from "../models/user.model";
 import { apiOk } from "../utils/api-response";
 import { HttpError } from "../utils/http-error";
 
@@ -20,21 +21,17 @@ export async function signup(request: Request, response: Response) {
       displayName: fullName,
     });
 
-    // 2. Create User Profile in Firestore
-    const userProfile = {
+    // 2. Create User Profile in MongoDB
+    const userProfile = await UserModel.create({
       uid: userRecord.uid,
       email,
       fullName,
       department: department || "Undeclared",
       graduationYear: graduationYear || new Date().getFullYear() + 4,
-      role: "student",
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
+      role: "student"
+    });
 
-    await firestore.collection("users").doc(userRecord.uid).set(userProfile);
-
-    response.status(StatusCodes.CREATED).json(apiOk(userProfile));
+    response.status(StatusCodes.CREATED).json(apiOk(userProfile.toJSON()));
   } catch (error: any) {
     throw new HttpError(StatusCodes.BAD_REQUEST, error.message || "Failed to create user");
   }
@@ -50,13 +47,13 @@ export async function login(request: Request, response: Response) {
     throw new HttpError(StatusCodes.UNAUTHORIZED, "User not authenticated");
   }
 
-  const userDoc = await firestore.collection("users").doc(userId).get();
+  const userDoc = await UserModel.findOne({ uid: userId });
   
-  if (!userDoc.exists) {
+  if (!userDoc) {
     throw new HttpError(StatusCodes.NOT_FOUND, "User profile not found");
   }
 
-  response.json(apiOk(userDoc.data()));
+  response.json(apiOk(userDoc.toJSON()));
 }
 
 export async function verifyRole(request: Request, response: Response) {

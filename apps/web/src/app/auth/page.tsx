@@ -6,8 +6,9 @@ import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { Mail, Lock, User, ArrowRight, Eye, EyeOff, Sparkles } from "lucide-react";
 
-import { loginWithEmail, loginWithGoogle, registerWithEmail } from "@/lib/firebase/auth";
+import { loginWithEmail, loginWithGoogle } from "@/lib/firebase/auth";
 import { useAuthStore } from "@/lib/stores/useAuthStore";
+import { authService } from "@/services";
 
 type AuthMode = "login" | "register";
 
@@ -47,7 +48,12 @@ export default function AuthPage() {
           setLoading(false);
           return;
         }
-        await registerWithEmail(email, password, name);
+        await authService.signup({
+          email,
+          password,
+          fullName: name
+        });
+        await loginWithEmail(email, password);
       }
       router.replace("/");
     } catch (err: any) {

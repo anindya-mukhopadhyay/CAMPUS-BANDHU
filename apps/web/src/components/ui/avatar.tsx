@@ -9,6 +9,8 @@ type AvatarProps = {
   status?: "online" | "offline" | "away" | "busy" | null;
   glow?: boolean;
   className?: string;
+  style?: React.CSSProperties;
+  imageStyle?: React.CSSProperties;
 };
 
 const sizeMap = {
@@ -57,9 +59,9 @@ function getColorFromName(name: string): string {
   return colors[Math.abs(hash) % colors.length]!;
 }
 
-export function Avatar({ src, name, size = "md", status, glow = false, className }: AvatarProps) {
+export function Avatar({ src, name, size = "md", status, glow = false, className, style, imageStyle }: AvatarProps) {
   return (
-    <div className={cn("relative inline-flex shrink-0", className)}>
+    <div className={cn("relative inline-flex shrink-0 rounded-full", className)} style={style}>
       {src ? (
         <img
           src={src}
@@ -69,6 +71,7 @@ export function Avatar({ src, name, size = "md", status, glow = false, className
             sizeMap[size],
             glow && "ring-2 ring-accent/40 shadow-[0_0_15px_rgba(0,212,255,0.2)]"
           )}
+          style={imageStyle}
         />
       ) : (
         <div
@@ -78,6 +81,7 @@ export function Avatar({ src, name, size = "md", status, glow = false, className
             getColorFromName(name),
             glow && "ring-2 ring-accent/40 shadow-[0_0_15px_rgba(0,212,255,0.2)]"
           )}
+          style={imageStyle}
         >
           {getInitials(name)}
         </div>

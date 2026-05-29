@@ -5,8 +5,14 @@ import * as adminController from "../controllers/admin.controller";
 
 export const adminRouter = Router();
 
-// All admin routes require super_admin or college_admin role
-adminRouter.use(requireAuth);
+// Seeding endpoint requires only authentication (so a new user can seed their own admin profile)
+adminRouter.post(
+  "/seed",
+  requireAuth,
+  asyncHandler(adminController.seedDatabase)
+);
+
+// All subsequent admin routes require super_admin or college_admin role
 adminRouter.use(requireRole("super_admin", "college_admin"));
 
 adminRouter.get(

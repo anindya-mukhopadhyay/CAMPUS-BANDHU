@@ -18,6 +18,7 @@ import { recommendationsRouter } from "./routes/recommendations.route";
 import { authRouter } from "./routes/auth.route";
 import { chatRouter } from "./routes/chat.route";
 import { adminRouter } from "./routes/admin.route";
+import { teamsRouter } from "./routes/teams.route";
 
 export function createApp(): express.Express {
   const app = express();
@@ -45,8 +46,8 @@ export function createApp(): express.Express {
     })
   );
 
-  app.use(express.json({ limit: "2mb" }));
-  app.use(express.urlencoded({ extended: true }));
+  app.use(express.json({ limit: "10mb" }));
+  app.use(express.urlencoded({ limit: "10mb", extended: true }));
   app.use((request, _response, next) => {
     logger.info({ method: request.method, path: request.path }, "Incoming request");
     next();
@@ -60,6 +61,7 @@ export function createApp(): express.Express {
   app.use("/api/v1/users", usersRouter);
   app.use("/api/v1/chat", chatRouter);
   app.use("/api/v1/admin", adminRouter);
+  app.use("/api/v1/teams", teamsRouter);
   app.use("/api/v1", recruitersRouter);
   app.use("/api/v1", recommendationsRouter);
   app.use("/api/v1", achievementsRouter);

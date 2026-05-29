@@ -28,6 +28,12 @@ export const userService = {
   addSkill: (skill: string) => apiClient.post("/users/me/skills", { skill }),
 };
 
+export const feedService = {
+  getAll: () => apiClient.get("/feed"),
+  create: (content: string) => apiClient.post("/feed", { content }),
+  like: (id: string) => apiClient.post(`/feed/${id}/like`),
+};
+
 export const chatService = {
   getConversations: () => apiClient.get("/chat/conversations"),
   getMessages: (conversationId: string) => apiClient.get(`/chat/messages/${conversationId}`),
@@ -38,4 +44,13 @@ export const adminService = {
   getAnalytics: () => apiClient.get("/admin/analytics"),
   moderateUser: (userId: string, action: string) => apiClient.post("/admin/moderate", { userId, action }),
   postAnnouncement: (data: any) => apiClient.post("/admin/announcement", data),
+  seed: () => apiClient.post("/admin/seed"),
+};
+
+export const teamService = {
+  getAll: () => apiClient.get("/teams"),
+  create: (data: any) => apiClient.post("/teams", data),
+  joinRequest: (id: string) => apiClient.post(`/teams/${id}/request`),
+  acceptRequest: (id: string, requesterId: string) => apiClient.post(`/teams/${id}/accept`, { requesterId }),
+  rejectRequest: (id: string, requesterId: string) => apiClient.post(`/teams/${id}/reject`, { requesterId }),
 };

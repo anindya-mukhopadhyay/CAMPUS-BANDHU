@@ -10,6 +10,7 @@ const schema = z.object({
   AI_SERVICE_URL: z.string().url().default("http://localhost:8000"),
   FIREBASE_CLIENT_EMAIL: z.string().optional(),
   FIREBASE_PRIVATE_KEY: z.string().optional(),
+  MONGO_URI: z.string().default("mongodb://localhost:27017/campus-bandhu"),
   JWT_AUDIENCE: z.string().default("campus-bandhu"),
   JWT_ISSUER: z.string().default("https://securetoken.google.com/campus-bandhu"),
   POLYGON_RPC_URL: z.string().default("https://polygon-rpc.com"),

@@ -1,8 +1,6 @@
 import { create } from "zustand";
 import { type User } from "firebase/auth";
 
-import { db } from "../firebase/client";
-import { doc, getDoc, setDoc } from "firebase/firestore";
 import { userService } from "@/services";
 
 export type Role = "super_admin" | "college_admin" | "faculty" | "organizer" | "volunteer" | "student" | "recruiter";
@@ -35,13 +33,42 @@ export type ProfileData = {
   interests: string[];
   skills: string[];
   role: Role;
+  skillLevels?: Record<string, number>;
   avatarUrl?: string;
+  coverPhotoUrl?: string;
+  avatarZoom?: number;
+  avatarX?: number;
+  avatarY?: number;
+  coverZoom?: number;
+  coverY?: number;
   email?: string;
   githubUrl?: string;
   linkedinUrl?: string;
   resumeUrl?: string;
   collegeId?: string;
   collegeName?: string;
+  gender?: string;
+  leetcodeUrl?: string;
+  orcidUrl?: string;
+  projects?: Array<{
+    title: string;
+    description: string;
+    photoUrl?: string;
+    youtubeLink?: string;
+    githubLink?: string;
+  }>;
+  experience?: Array<{
+    role: string;
+    company: string;
+    duration: string;
+    description?: string;
+  }>;
+  licenses?: Array<{
+    name: string;
+    issuer: string;
+    issueDate?: string;
+    credentialUrl?: string;
+  }>;
 };
 
 type AuthState = {
@@ -70,13 +97,14 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     const { user, profile } = get();
     if (!user) return;
 
+    // Optimistically update locally
     set({ role: newRole, profile: profile ? { ...profile, role: newRole } : null });
 
     try {
-      const docRef = doc(db, "users", user.uid);
-      await setDoc(docRef, { role: newRole, updatedAt: new Date().toISOString() }, { merge: true });
+      // Update role securely via Backend API
+      await userService.updateProfile({ role: newRole });
     } catch (error) {
-      console.error("Failed to update role in Firestore:", error);
+      console.error("Failed to update role via API:", error);
     }
   },
   updateProfile: async (data: Partial<ProfileData>) => {
@@ -88,60 +116,35 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       set({ profile: response.data });
     } catch (error) {
       console.error("Failed to update profile via API:", error);
-      // Local fallback
+      // Local fallback in case of connection drop
       set({ profile: { ...profile, ...data } });
     }
   },
   initializeProfile: async (user: User) => {
     set({ isLoading: true });
     try {
-      // 1. Try to fetch profile from our Backend API
+      // Fetch profile from our Backend API (which auto-creates if new)
       const response = await userService.getMe();
       set({ profile: response.data, role: response.data.role, isLoading: false });
     } catch (error: any) {
-      console.warn("API profile fetch failed, falling back to local Firestore:", error);
+      console.error("Critical: API profile initialization failed:", error);
       
-      // 2. Fallback to direct Firestore if API is down or user is new
-      try {
-        const docRef = doc(db, "users", user.uid);
-        const snapshot = await getDoc(docRef);
-
-        if (snapshot.exists()) {
-          const data = snapshot.data() as ProfileData;
-          set({ profile: data, role: data.role, isLoading: false });
-        } else {
-          const newProfile: ProfileData = {
-            fullName: user.displayName || "New User",
-            department: "Undeclared",
-            graduationYear: new Date().getFullYear() + 4,
-            bio: "",
-            interests: [],
-            skills: [],
-            role: "student",
-            avatarUrl: user.photoURL || undefined,
-            email: user.email || undefined
-          };
-          await setDoc(docRef, { ...newProfile, createdAt: new Date().toISOString() });
-          set({ profile: newProfile, role: newProfile.role, isLoading: false });
-        }
-      } catch (innerError: any) {
-        console.error("Critical: Both API and Firestore failed:", innerError);
-        set({
-          profile: {
-            fullName: user.displayName || "User",
-            department: "Undeclared",
-            graduationYear: new Date().getFullYear() + 4,
-            bio: "",
-            interests: [],
-            skills: [],
-            role: "student",
-            avatarUrl: user.photoURL || undefined,
-            email: user.email || undefined
-          },
+      // Basic fallback profile structure
+      set({
+        profile: {
+          fullName: user.displayName || "User",
+          department: "Undeclared",
+          graduationYear: new Date().getFullYear() + 4,
+          bio: "",
+          interests: [],
+          skills: [],
           role: "student",
-          isLoading: false
-        });
-      }
+          avatarUrl: user.photoURL || undefined,
+          email: user.email || undefined
+        },
+        role: "student",
+        isLoading: false
+      });
     }
   },
   mockLogin: (role, collegeId, collegeName) => {

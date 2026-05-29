@@ -1,46 +1,45 @@
 import { z } from "zod";
-
-import { firestore } from "../config/firebase-admin";
-
-const postsRef = firestore.collection("posts");
+import mongoose from "mongoose";
+import PostModel from "../models/post.model";
 
 const createPostSchema = z.object({
-  content: z.string().min(3).max(500)
+  content: z.string().min(3).max(500),
+  id: z.string().optional()
 });
 
 export async function listFeedPosts(): Promise<Record<string, unknown>[]> {
-  const snapshot = await postsRef.orderBy("createdAt", "desc").limit(30).get();
-  return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+  const posts = await PostModel.find({}).sort({ createdAt: -1 }).limit(30);
+  return posts.map((doc) => doc.toJSON()) as any;
 }
 
 export async function createFeedPost(userId: string, authorName: string, content: string): Promise<Record<string, unknown>> {
   const parsed = createPostSchema.parse({ content });
+  
+  const postId = parsed.id || new mongoose.Types.ObjectId().toString();
+
   const post = {
+    _id: postId,
     authorId: userId,
     authorName,
     content: parsed.content,
     likes: 0,
-    comments: 0,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
+    comments: 0
   };
 
-  const created = await postsRef.add(post);
-  return { id: created.id, ...post };
+  const created = await PostModel.create(post);
+  return created.toJSON() as any;
 }
 
 export async function likePost(postId: string): Promise<Record<string, unknown>> {
-  const postRef = postsRef.doc(postId);
+  const updated = await PostModel.findByIdAndUpdate(
+    postId,
+    { $inc: { likes: 1, likesCount: 1 } },
+    { new: true }
+  );
 
-  await firestore.runTransaction(async (transaction) => {
-    const snapshot = await transaction.get(postRef);
-    if (!snapshot.exists) {
-      throw new Error("Post not found");
-    }
+  if (!updated) {
+    throw new Error("Post not found");
+  }
 
-    const likes = (snapshot.get("likes") as number | undefined) ?? 0;
-    transaction.update(postRef, { likes: likes + 1, updatedAt: new Date().toISOString() });
-  });
-
-  return { postId, status: "liked" };
+  return { postId, status: "liked", likes: updated.likes };
 }

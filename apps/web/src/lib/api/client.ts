@@ -19,12 +19,19 @@ export async function apiRequest<TData>(
   body?: unknown
 ): Promise<TData> {
   const token = await getToken();
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json"
+  };
+
+  if (token) {
+    headers.Authorization = `Bearer ${token}`;
+  } else if (process.env.NODE_ENV === "development") {
+    headers.Authorization = `Bearer mock-token`;
+  }
+
   const response = await fetch(`${API_BASE_URL}${endpoint}`, {
     method,
-    headers: {
-      "Content-Type": "application/json",
-      ...(token ? { Authorization: `Bearer ${token}` } : {})
-    },
+    headers,
     body: body ? JSON.stringify(body) : undefined,
     cache: "no-store"
   });

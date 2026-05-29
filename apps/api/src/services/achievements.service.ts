@@ -1,16 +1,16 @@
 import { JsonRpcProvider, Wallet, Contract } from "ethers";
 import { z } from "zod";
+import mongoose from "mongoose";
 
 import { env } from "../config/env";
-import { firestore } from "../config/firebase-admin";
-
-const achievementsRef = firestore.collection("achievements");
+import AchievementModel from "../models/achievement.model";
 
 const mintSchema = z.object({
   studentId: z.string().min(3),
   eventId: z.string().min(3),
   title: z.string().min(3),
-  metadataUri: z.string().url()
+  metadataUri: z.string().url(),
+  id: z.string().optional()
 });
 
 const ABI = [
@@ -28,25 +28,28 @@ type AchievementContract = Contract & {
 };
 
 export async function listAchievements(studentId: string): Promise<Record<string, unknown>[]> {
-  const snapshot = await achievementsRef.where("studentId", "==", studentId).limit(100).get();
-  return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+  const achievements = await AchievementModel.find({ studentId }).limit(100);
+  return achievements.map((doc) => doc.toJSON()) as any;
 }
 
 export async function mintAchievement(payload: unknown): Promise<Record<string, unknown>> {
   const parsed = mintSchema.parse(payload);
+  
+  const achievementId = parsed.id || new mongoose.Types.ObjectId().toString();
 
   if (!env.PRIVATE_KEY || !env.ACHIEVEMENT_CONTRACT_ADDRESS) {
     const fallbackRecord = {
+      _id: achievementId,
       ...parsed,
       verified: false,
-      txHash: null,
-      tokenId: null,
-      mintedAt: new Date().toISOString(),
+      txHash: undefined,
+      tokenId: undefined,
+      mintedAt: new Date(),
       note: "Blockchain signer not configured"
     };
 
-    const ref = await achievementsRef.add(fallbackRecord);
-    return { id: ref.id, ...fallbackRecord };
+    const created = await AchievementModel.create(fallbackRecord);
+    return created.toJSON() as any;
   }
 
   const provider = new JsonRpcProvider(env.POLYGON_RPC_URL);
@@ -57,13 +60,14 @@ export async function mintAchievement(payload: unknown): Promise<Record<string, 
   const receipt = await tx.wait();
 
   const onChainRecord = {
+    _id: achievementId,
     ...parsed,
     verified: true,
     txHash: receipt?.hash ?? tx.hash,
-    tokenId: null,
-    mintedAt: new Date().toISOString()
+    tokenId: undefined,
+    mintedAt: new Date()
   };
 
-  const ref = await achievementsRef.add(onChainRecord);
-  return { id: ref.id, ...onChainRecord };
+  const created = await AchievementModel.create(onChainRecord);
+  return created.toJSON() as any;
 }

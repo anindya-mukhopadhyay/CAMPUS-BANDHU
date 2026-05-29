@@ -7,13 +7,13 @@ import { useState, type ReactNode } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Bell, BrainCircuit, Compass, LayoutGrid, Store, UserCircle2, Users,
-  Briefcase, Shield, LogOut, Database, Menu, X, ChevronDown, Zap
+  Briefcase, Shield, LogOut, Database, Menu, X, ChevronDown, Zap, HelpCircle, Settings
 } from "lucide-react";
 
 import { cn } from "@/lib/utils/cn";
 import { type Role, ROLE_LABELS, ROLE_COLORS, useAuthStore } from "@/lib/stores/useAuthStore";
 import { logout } from "@/lib/firebase/auth";
-import { seedDemoDataFromClient } from "@/lib/utils/seed";
+import { adminService } from "@/services";
 import { Avatar } from "@/components/ui/avatar";
 import { NeonBadge } from "@/components/ui/neon-badge";
 import { AnimatedCounter } from "@/components/ui/animated-counter";
@@ -47,7 +47,7 @@ type AppShellProps = {
 export function AppShell({ children }: AppShellProps) {
   const pathname = usePathname();
   const router = useRouter();
-  const { user, profile, role, setRole, isAuthenticated } = useAuthStore();
+  const { user, profile, role, setRole, isAuthenticated, initializeProfile } = useAuthStore();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [roleSwitcherOpen, setRoleSwitcherOpen] = useState(false);
   const [isSeeding, setIsSeeding] = useState(false);
@@ -62,8 +62,9 @@ export function AppShell({ children }: AppShellProps) {
     if (!user) return;
     setIsSeeding(true);
     try {
-      await seedDemoDataFromClient(user.uid, user.displayName || "Demo User");
-      alert("✅ Demo data seeded!");
+      await adminService.seed();
+      alert("✅ MongoDB database seeded!");
+      await initializeProfile(user);
     } catch {
       alert("❌ Seed failed. Check console.");
     } finally {
@@ -310,8 +311,86 @@ export function AppShell({ children }: AppShellProps) {
       </AnimatePresence>
 
       {/* ══════ Main Content ══════ */}
-      <main className="w-full min-w-0 pt-16 lg:pt-0">
-        {children}
+      <main className="w-full min-w-0 pt-16 lg:pt-0 flex flex-col justify-between">
+        <div className="flex-1">
+          {children}
+        </div>
+        
+        {/* LinkedIn-style LinkedIn Premium Footer */}
+        <footer className="mt-16 border-t border-white/[0.08] pt-10 pb-8 text-[11px] text-slate">
+          <div className="grid grid-cols-2 gap-8 md:grid-cols-5">
+            {/* Col 1 */}
+            <div className="flex flex-col gap-2.5">
+              <a href="#" className="hover:text-white transition-colors font-medium">About</a>
+              <a href="#" className="hover:text-white transition-colors font-medium">Community Guidelines</a>
+              <div className="flex items-center gap-1 cursor-pointer hover:text-white transition-colors font-medium">
+                <span>Privacy & Terms</span>
+                <ChevronDown className="h-3 w-3" />
+              </div>
+              <a href="#" className="hover:text-white transition-colors font-medium">Sales Solutions</a>
+              <a href="#" className="hover:text-white transition-colors font-medium">Safety Center</a>
+            </div>
+
+            {/* Col 2 */}
+            <div className="flex flex-col gap-2.5">
+              <a href="#" className="hover:text-white transition-colors font-medium">Accessibility</a>
+              <a href="#" className="hover:text-white transition-colors font-medium">Careers</a>
+              <a href="#" className="hover:text-white transition-colors font-medium">Ad Choices</a>
+              <a href="#" className="hover:text-white transition-colors font-medium">Mobile</a>
+            </div>
+
+            {/* Col 3 */}
+            <div className="flex flex-col gap-2.5">
+              <a href="#" className="hover:text-white transition-colors font-medium">Talent Solutions</a>
+              <a href="#" className="hover:text-white transition-colors font-medium">Marketing Solutions</a>
+              <a href="#" className="hover:text-white transition-colors font-medium">Advertising</a>
+              <a href="#" className="hover:text-white transition-colors font-medium">Small Business</a>
+            </div>
+
+            {/* Col 4 */}
+            <div className="flex flex-col gap-4">
+              <div className="flex items-start gap-2.5">
+                <HelpCircle className="h-4.5 w-4.5 text-slate shrink-0 mt-0.5" />
+                <div>
+                  <a href="#" className="hover:text-white hover:underline transition-colors font-bold text-white block">Questions?</a>
+                  <p className="text-[10px] text-slate mt-0.5 leading-normal">Visit our Help Center.</p>
+                </div>
+              </div>
+              <div className="flex items-start gap-2.5">
+                <Settings className="h-4.5 w-4.5 text-slate shrink-0 mt-0.5" />
+                <div>
+                  <a href="#" className="hover:text-white hover:underline transition-colors font-bold text-white block">Manage your account and privacy</a>
+                  <p className="text-[10px] text-slate mt-0.5 leading-normal">Go to your Settings.</p>
+                </div>
+              </div>
+              <div className="flex items-start gap-2.5">
+                <Shield className="h-4.5 w-4.5 text-slate shrink-0 mt-0.5" />
+                <div>
+                  <a href="#" className="hover:text-white hover:underline transition-colors font-bold text-white block">Recommendation transparency</a>
+                  <p className="text-[10px] text-slate mt-0.5 leading-normal">Learn more about Recommended Content.</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Col 5 */}
+            <div className="flex flex-col gap-2">
+              <label className="text-[10px] text-slate font-medium">Select language</label>
+              <div className="relative w-full max-w-[200px]">
+                <select className="h-9 w-full rounded-lg border border-white/10 bg-black/40 px-3 pr-8 text-[11px] text-slate transition-colors focus:border-white/20 focus:outline-none appearance-none cursor-pointer">
+                  <option>English (English)</option>
+                  <option>Spanish (Español)</option>
+                  <option>French (Français)</option>
+                  <option>Hindi (हिन्दी)</option>
+                </select>
+                <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate pointer-events-none" />
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-8 border-t border-white/[0.04] pt-6">
+            <span className="text-[10px] text-subtle font-medium">CAMPUS-BANDHU Corporation © 2026</span>
+          </div>
+        </footer>
       </main>
     </div>
   );

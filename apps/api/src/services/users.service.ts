@@ -1,22 +1,57 @@
 import { z } from "zod";
-
-import { firestore } from "../config/firebase-admin";
-
-const usersRef = firestore.collection("users");
+import UserModel from "../models/user.model";
 
 const profileSchema = z.object({
   fullName: z.string().min(3),
+  email: z.string().email().optional(),
   department: z.string().min(2),
   graduationYear: z.number().min(2000).max(2100),
   bio: z.string().max(400).default(""),
   interests: z.array(z.string()).default([]),
-  skills: z.array(z.string()).default([])
+  skills: z.array(z.string()).default([]),
+  avatarUrl: z.string().optional(),
+  coverPhotoUrl: z.string().optional(),
+  avatarZoom: z.number().optional(),
+  avatarX: z.number().optional(),
+  avatarY: z.number().optional(),
+  coverZoom: z.number().optional(),
+  coverY: z.number().optional(),
+  githubUrl: z.string().optional().or(z.literal("")),
+  linkedinUrl: z.string().optional().or(z.literal("")),
+  resumeUrl: z.string().optional(),
+  collegeId: z.string().optional(),
+  collegeName: z.string().optional(),
+  gender: z.string().optional(),
+  leetcodeUrl: z.string().optional().or(z.literal("")),
+  orcidUrl: z.string().optional().or(z.literal("")),
+  projects: z.array(z.object({
+    title: z.string(),
+    description: z.string(),
+    photoUrl: z.string().optional(),
+    youtubeLink: z.string().optional().or(z.literal("")),
+    githubLink: z.string().optional().or(z.literal(""))
+  })).optional(),
+  experience: z.array(z.object({
+    role: z.string(),
+    company: z.string(),
+    duration: z.string(),
+    description: z.string().optional()
+  })).optional(),
+  licenses: z.array(z.object({
+    name: z.string(),
+    issuer: z.string(),
+    issueDate: z.string().optional(),
+    credentialUrl: z.string().optional().or(z.literal(""))
+  })).optional(),
+  skillLevels: z.record(z.string(), z.number()).optional()
 });
 
 export async function getProfileById(userId: string): Promise<Record<string, unknown>> {
-  const snapshot = await usersRef.doc(userId).get();
-  if (!snapshot.exists) {
+  const user = await UserModel.findOne({ uid: userId });
+  if (!user) {
     const defaults = {
+      uid: userId,
+      email: `${userId.substring(0, 8)}@campus.edu`, // Mock email placeholder
       fullName: "New User",
       department: "Undeclared",
       graduationYear: new Date().getFullYear() + 4,
@@ -24,47 +59,38 @@ export async function getProfileById(userId: string): Promise<Record<string, unk
       interests: [],
       skills: [],
       role: "student",
-      updatedAt: new Date().toISOString()
+      status: "active"
     };
 
-    await usersRef.doc(userId).set(defaults);
-    return { id: userId, ...defaults };
+    const created = await UserModel.create(defaults);
+    return created.toJSON() as any;
   }
 
-  return { id: snapshot.id, ...snapshot.data() };
+  return user.toJSON() as any;
 }
 
 export async function updateProfile(userId: string, payload: unknown): Promise<Record<string, unknown>> {
   const parsed = profileSchema.partial().parse(payload);
 
-  await usersRef.doc(userId).set(
-    {
-      ...parsed,
-      updatedAt: new Date().toISOString()
-    },
-    { merge: true }
+  const updated = await UserModel.findOneAndUpdate(
+    { uid: userId },
+    { $set: parsed },
+    { new: true, upsert: true }
   );
 
-  const updated = await usersRef.doc(userId).get();
-  return { id: updated.id, ...updated.data() };
+  return updated.toJSON() as any;
 }
 
 export async function addSkill(userId: string, skill: string): Promise<Record<string, unknown>> {
-  const profile = await getProfileById(userId);
-  const existingSkills = (profile.skills as string[] | undefined) ?? [];
-
-  if (!existingSkills.includes(skill)) {
-    existingSkills.push(skill);
-  }
-
-  await usersRef.doc(userId).set(
-    {
-      skills: existingSkills,
-      updatedAt: new Date().toISOString()
-    },
-    { merge: true }
+  const updated = await UserModel.findOneAndUpdate(
+    { uid: userId },
+    { $addToSet: { skills: skill } },
+    { new: true }
   );
 
-  return { id: userId, skills: existingSkills };
-}
+  if (!updated) {
+    throw new Error("User profile not found");
+  }
 
+  return { id: userId, skills: updated.skills };
+}
