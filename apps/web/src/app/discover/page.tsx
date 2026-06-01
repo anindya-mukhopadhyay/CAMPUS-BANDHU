@@ -399,7 +399,7 @@ export default function DiscoverPage() {
                             {isCreator ? (
                               <div className="flex flex-1 gap-1.5">
                                 <div className="flex-1 text-center py-1.5 bg-purple/10 border border-purple/20 rounded-lg text-purple font-semibold text-xs flex items-center justify-center">
-                                  Team Admin
+                                  Team Lead
                                 </div>
                                 <button
                                   onClick={() => handleEditTeamClick(team)}
