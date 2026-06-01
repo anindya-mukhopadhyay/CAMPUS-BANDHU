@@ -288,3 +288,19 @@ facultyRouter.post(
     response.json(apiOk(classObj.toJSON()));
   })
 );
+
+// 9. Get all verified students in the college (for faculty manual registrations)
+facultyRouter.get(
+  "/faculty/college/students",
+  asyncHandler(async (request, response) => {
+    const facultyUid = request.user?.uid;
+    const facultyProfile = await UserModel.findOne({ uid: facultyUid });
+    if (!facultyProfile) {
+      response.status(StatusCodes.NOT_FOUND).json({ message: "Faculty profile not found" });
+      return;
+    }
+    const collegeId = facultyProfile.collegeId || "NSUT";
+    const students = await UserModel.find({ role: "student", collegeId, status: "active" });
+    response.json(apiOk(students.map((s) => s.toJSON())));
+  })
+);

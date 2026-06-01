@@ -94,6 +94,7 @@ export const facultyService = {
   shareNote: (classId: string, data: { title: string; content: string; pdfData?: string; pdfName?: string }) => apiClient.post(`/faculty/classes/${classId}/notes`, data),
   registerClass: (classId: string, studentUid: string) => apiClient.post(`/faculty/classes/${classId}/register`, { studentUid }),
   getStudentClasses: () => apiClient.get("/faculty/student/classes"),
-  joinClass: (classId: string) => apiClient.post(`/faculty/student/classes/${classId}/join`, {})
+  joinClass: (classId: string) => apiClient.post(`/faculty/student/classes/${classId}/join`, {}),
+  getCollegeStudents: () => apiClient.get("/faculty/college/students")
 };
 

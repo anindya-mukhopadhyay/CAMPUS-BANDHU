@@ -66,6 +66,13 @@ export default function FacultyPortalPage() {
   const [noteError, setNoteError] = useState<string | null>(null);
   const [emailDispatchLogs, setEmailDispatchLogs] = useState<any[] | null>(null);
 
+  // Forms States - Register Student Manually
+  const [isRegisterModalOpen, setIsRegisterModalOpen] = useState(false);
+  const [collegeStudents, setCollegeStudents] = useState<any[]>([]);
+  const [selectedStudentUid, setSelectedStudentUid] = useState("");
+  const [registerLoading, setRegisterLoading] = useState(false);
+  const [registerError, setRegisterError] = useState<string | null>(null);
+
   const fetchClubs = async () => {
     try {
       const res = await facultyService.getClubs();
@@ -261,6 +268,46 @@ export default function FacultyPortalPage() {
     }
   };
 
+  const handleOpenRegisterStudentModal = async () => {
+    setIsRegisterModalOpen(true);
+    setRegisterError(null);
+    setSelectedStudentUid("");
+    try {
+      const res = await facultyService.getCollegeStudents();
+      setCollegeStudents(res.data || []);
+    } catch (err) {
+      console.error("Failed to load college students:", err);
+    }
+  };
+
+  const handleRegisterStudent = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedStudentUid) {
+      setRegisterError("Please select a student to register.");
+      return;
+    }
+    setRegisterLoading(true);
+    setRegisterError(null);
+    try {
+      const classId = selectedClass._id || selectedClass.id;
+      await facultyService.registerClass(classId, selectedStudentUid);
+      toast({ title: "Student successfully enrolled in classroom.", type: "success" });
+      
+      // Reload class roster
+      const studentsRes = await facultyService.getClassStudents(classId);
+      setClassStudents(studentsRes.data || []);
+
+      // Reload classes list to update registration count
+      await fetchClasses();
+      
+      setIsRegisterModalOpen(false);
+    } catch (err: any) {
+      setRegisterError(err?.message || "Failed to register student.");
+    } finally {
+      setRegisterLoading(false);
+    }
+  };
+
   return (
     <RoleGuard allowedRoles={["faculty", "super_admin"]}>
       <AppShell>
@@ -359,6 +406,14 @@ export default function FacultyPortalPage() {
                                     icon: <GraduationCap className="h-3.5 w-3.5" />,
                                     content: (
                                       <div className="space-y-3 pt-3">
+                                        <div className="flex justify-end mb-2">
+                                          <button
+                                            onClick={handleOpenRegisterStudentModal}
+                                            className="flex items-center gap-1.5 rounded-lg bg-white/[0.04] border border-white/[0.08] px-2.5 py-1.5 text-[11px] font-semibold text-white hover:bg-white/[0.08] transition-colors"
+                                          >
+                                            <Plus className="h-3 w-3 text-accent" /> Register Student
+                                          </button>
+                                        </div>
                                         {classStudents.map((student, idx) => (
                                           <div key={idx} className="flex items-center gap-3 rounded-xl bg-white/[0.02] p-3 border border-white/[0.04]">
                                             <Avatar name={student.fullName} size="sm" />
@@ -818,6 +873,80 @@ export default function FacultyPortalPage() {
                         </>
                       ) : (
                         "Post Event"
+                      )}
+                    </button>
+                  </div>
+                </form>
+              </GlassCard>
+            </div>
+          )}
+        </AnimatePresence>
+
+        {/* Modal: Register Student Manually */}
+        <AnimatePresence>
+          {isRegisterModalOpen && selectedClass && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+              <GlassCard className="max-w-md w-full relative shadow-glow animate-fade-in" padding="lg">
+                <h3 className="font-heading text-xl font-bold flex items-center gap-2 mb-2">
+                  <GraduationCap className="h-5 w-5 text-accent" /> Manual Class Enrollment
+                </h3>
+                <p className="text-xs text-slate mb-6">
+                  Select a student from your college roster to manually enroll them in <strong>{selectedClass.name}</strong>.
+                </p>
+
+                <form onSubmit={handleRegisterStudent} className="space-y-4">
+                  {registerError && (
+                    <div className="rounded-xl bg-rose/15 p-3 text-xs text-rose border border-rose/10">
+                      {registerError}
+                    </div>
+                  )}
+
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-semibold text-slate">Select Student</label>
+                    <select
+                      value={selectedStudentUid}
+                      onChange={(e) => setSelectedStudentUid(e.target.value)}
+                      disabled={registerLoading}
+                      className="w-full rounded-xl border border-white/[0.06] bg-white/[0.03] px-3.5 py-2.5 text-sm text-white focus:border-accent/30 focus:outline-none appearance-none cursor-pointer"
+                    >
+                      <option value="">-- Choose Student --</option>
+                      {collegeStudents
+                        .filter((student) => !classStudents.some((s) => s.uid === student.uid))
+                        .map((student) => (
+                          <option key={student.uid} value={student.uid}>
+                            {student.fullName} ({student.email}) - {student.department}
+                          </option>
+                        ))}
+                    </select>
+                    {collegeStudents.filter((student) => !classStudents.some((s) => s.uid === student.uid)).length === 0 && (
+                      <p className="text-[10px] text-rose mt-1">No other verified college students available to register.</p>
+                    )}
+                  </div>
+
+                  <div className="flex justify-end gap-3 pt-4">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsRegisterModalOpen(false);
+                        setSelectedStudentUid("");
+                        setRegisterError(null);
+                      }}
+                      disabled={registerLoading}
+                      className="px-4 py-2 rounded-xl text-sm text-slate hover:text-white bg-white/[0.03] hover:bg-white/[0.08] transition-colors"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={registerLoading || !selectedStudentUid}
+                      className="flex items-center gap-1.5 px-5 py-2 rounded-xl text-sm font-semibold text-black bg-accent hover:bg-accent/90 transition-colors disabled:opacity-55"
+                    >
+                      {registerLoading ? (
+                        <>
+                          <Loader2 className="h-3.5 w-3.5 animate-spin" /> Enrolling...
+                        </>
+                      ) : (
+                        "Enroll Student"
                       )}
                     </button>
                   </div>
