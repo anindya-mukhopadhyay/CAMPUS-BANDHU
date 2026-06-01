@@ -12,8 +12,105 @@ import ClassNoteModel from "../models/class-note.model";
 
 export const facultyRouter = Router();
 
-// Apply auth and faculty-role checks
+// Apply auth globally
 facultyRouter.use(requireAuth);
+
+// ==========================================
+// STUDENT ACCESSIBLE CLASSROOM API ENDPOINTS
+// ==========================================
+
+// A. Get all classrooms in the student's college
+facultyRouter.get(
+  "/faculty/student/classes",
+  asyncHandler(async (request, response) => {
+    const userUid = request.user?.uid;
+    if (!userUid) {
+      response.status(StatusCodes.UNAUTHORIZED).json({ message: "Unauthorized." });
+      return;
+    }
+    const userProfile = await UserModel.findOne({ uid: userUid });
+    if (!userProfile) {
+      response.status(StatusCodes.NOT_FOUND).json({ message: "User profile not found." });
+      return;
+    }
+    const collegeId = userProfile.collegeId || "NSUT";
+    const classes = await ClassModel.find({ collegeId });
+    response.json(apiOk(classes.map((c) => c.toJSON())));
+  })
+);
+
+// B. Join a classroom (students only)
+facultyRouter.post(
+  "/faculty/student/classes/:classId/join",
+  asyncHandler(async (request, response) => {
+    const { classId } = request.params;
+    const userUid = request.user?.uid;
+    if (!userUid) {
+      response.status(StatusCodes.UNAUTHORIZED).json({ message: "Unauthorized." });
+      return;
+    }
+    const userProfile = await UserModel.findOne({ uid: userUid });
+    if (!userProfile) {
+      response.status(StatusCodes.NOT_FOUND).json({ message: "User profile not found." });
+      return;
+    }
+
+    // Make sure only students can join classes
+    if (userProfile.role !== "student") {
+      response.status(StatusCodes.FORBIDDEN).json({ message: "Only students are allowed to join classrooms." });
+      return;
+    }
+
+    const classObj = await ClassModel.findById(classId);
+    if (!classObj) {
+      response.status(StatusCodes.NOT_FOUND).json({ message: "Classroom not found." });
+      return;
+    }
+
+    // Verify student is joining their own college's classroom
+    if (classObj.collegeId !== userProfile.collegeId) {
+      response.status(StatusCodes.FORBIDDEN).json({ message: "You can only join classrooms in your own college." });
+      return;
+    }
+
+    if (!classObj.registeredStudentIds.includes(userUid)) {
+      classObj.registeredStudentIds.push(userUid);
+      await classObj.save();
+    }
+
+    response.json(apiOk(classObj.toJSON()));
+  })
+);
+
+// C. Get note history for a class (both teacher and registered student can fetch!)
+facultyRouter.get(
+  "/faculty/classes/:classId/notes",
+  asyncHandler(async (request, response) => {
+    const { classId } = request.params;
+    const userUid = request.user?.uid;
+    if (!userUid) {
+      response.status(StatusCodes.UNAUTHORIZED).json({ message: "Unauthorized." });
+      return;
+    }
+
+    const classObj = await ClassModel.findOne({ _id: classId, teacherId: userUid });
+    if (!classObj) {
+      // Check if user is a registered student in this class
+      const studentObj = await ClassModel.findOne({ _id: classId, registeredStudentIds: userUid });
+      if (!studentObj) {
+        response.status(StatusCodes.FORBIDDEN).json({ message: "Access denied. You must be the teacher or a registered student of this class." });
+        return;
+      }
+    }
+
+    const notes = await ClassNoteModel.find({ classId }).sort({ createdAt: -1 });
+    response.json(apiOk(notes.map((n) => n.toJSON())));
+  })
+);
+
+// ==========================================
+// FACULTY & ADMIN SCOPED ENDPOINTS ONLY
+// ==========================================
 facultyRouter.use(requireRole("faculty", "super_admin"));
 
 // 1. Get allocated clubs
@@ -129,27 +226,7 @@ facultyRouter.get(
   })
 );
 
-// 6. Get note history for a class
-facultyRouter.get(
-  "/faculty/classes/:classId/notes",
-  asyncHandler(async (request, response) => {
-    const { classId } = request.params;
-    const facultyUid = request.user?.uid;
 
-    const classObj = await ClassModel.findOne({ _id: classId, teacherId: facultyUid });
-    if (!classObj) {
-      // Compatibility check: let registered students read it too!
-      const studentObj = await ClassModel.findOne({ _id: classId, registeredStudentIds: facultyUid });
-      if (!studentObj) {
-        response.status(StatusCodes.NOT_FOUND).json({ message: "Class not found" });
-        return;
-      }
-    }
-
-    const notes = await ClassNoteModel.find({ classId }).sort({ createdAt: -1 });
-    response.json(apiOk(notes.map((n) => n.toJSON())));
-  })
-);
 
 // 7. Share Note / PDF & send mail logs
 facultyRouter.post(

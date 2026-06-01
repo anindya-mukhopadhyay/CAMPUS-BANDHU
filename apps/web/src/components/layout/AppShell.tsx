@@ -8,7 +8,7 @@ import { systemService } from "@/services";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Bell, BrainCircuit, Compass, LayoutGrid, Store, UserCircle2, Users,
-  Briefcase, Shield, LogOut, Menu, X, ChevronDown, Zap, HelpCircle, Settings, Award
+  Briefcase, Shield, LogOut, Menu, X, ChevronDown, Zap, HelpCircle, Settings, Award, BookOpen
 } from "lucide-react";
 
 import { cn } from "@/lib/utils/cn";
@@ -102,6 +102,12 @@ const getIconVariants = (label: string) => {
         hover: { scale: 1.2, rotate: [0, -10, 10, -10, 10, 0], transition: { duration: 0.5 } },
         active: { scale: 1.1, rotate: 0 }
       };
+    case "Academics":
+      return {
+        default: { scale: 1, y: 0 },
+        hover: { scale: 1.18, y: -2, transition: { type: "spring", stiffness: 300, damping: 10 } },
+        active: { scale: 1.1, y: 0 }
+      };
     default:
       return {
         default: { scale: 1 },
@@ -121,6 +127,7 @@ const navItems: NavItem[] = [
   { href: "/assistant", label: "AI Copilot", icon: BrainCircuit },
   { href: "/profile", label: "Identity", icon: UserCircle2 },
   { href: "/recruiters", label: "Recruiters", icon: Briefcase, allowedRoles: ["student", "recruiter", "super_admin", "college_admin"] },
+  { href: "/classes", label: "Academics", icon: BookOpen, allowedRoles: ["student", "super_admin"] },
   { href: "/admin", label: "Admin Panel", icon: Shield, allowedRoles: ["super_admin", "college_admin"] },
   { href: "/faculty", label: "Faculty Hub", icon: Award, allowedRoles: ["faculty", "super_admin"] }
 ];
