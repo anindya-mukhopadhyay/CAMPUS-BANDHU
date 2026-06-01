@@ -19,6 +19,7 @@ export default function AuthPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
+  const [userIdInput, setUserIdInput] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -48,10 +49,21 @@ export default function AuthPage() {
           setLoading(false);
           return;
         }
+        if (!userIdInput.trim()) {
+          setError("Please choose a unique User ID.");
+          setLoading(false);
+          return;
+        }
+        if (!/^[a-zA-Z0-9_]{3,30}$/.test(userIdInput)) {
+          setError("User ID must be 3-30 alphanumeric characters or underscores.");
+          setLoading(false);
+          return;
+        }
         await authService.signup({
           email,
           password,
-          fullName: name
+          fullName: name,
+          userId: userIdInput.toLowerCase().trim()
         });
         await loginWithEmail(email, password);
       }
@@ -167,17 +179,36 @@ export default function AuthPage() {
                   animate={{ opacity: 1, height: "auto" }}
                   exit={{ opacity: 0, height: 0 }}
                   transition={{ duration: 0.2 }}
+                  className="space-y-4"
                 >
-                  <label className="mb-1.5 block text-xs font-medium text-slate">Full Name</label>
-                  <div className="relative">
-                    <User className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate" />
-                    <input
-                      type="text"
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
-                      placeholder="Enter your full name"
-                      className="w-full rounded-xl border border-white/10 bg-white/[0.04] py-3 pl-10 pr-4 text-sm text-white placeholder:text-subtle transition-colors focus:border-accent/50 focus:outline-none focus:ring-1 focus:ring-accent/30"
-                    />
+                  <div>
+                    <label className="mb-1.5 block text-xs font-medium text-slate">Full Name</label>
+                    <div className="relative">
+                      <User className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate" />
+                      <input
+                        type="text"
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                        placeholder="Enter your full name"
+                        className="w-full rounded-xl border border-white/10 bg-white/[0.04] py-3 pl-10 pr-4 text-sm text-white placeholder:text-subtle transition-colors focus:border-accent/50 focus:outline-none focus:ring-1 focus:ring-accent/30"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="mb-1.5 block text-xs font-medium text-slate">Choose unique User ID</label>
+                    <div className="relative">
+                      <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-xs font-bold text-accent">@</span>
+                      <input
+                        type="text"
+                        value={userIdInput}
+                        onChange={(e) => setUserIdInput(e.target.value)}
+                        placeholder="username"
+                        required
+                        className="w-full rounded-xl border border-white/10 bg-white/[0.04] py-3 pl-8 pr-4 text-sm text-white placeholder:text-subtle transition-colors focus:border-accent/50 focus:outline-none focus:ring-1 focus:ring-accent/30"
+                      />
+                    </div>
+                    <span className="text-[10px] text-slate mt-1 block">3-30 letters, numbers or underscores</span>
                   </div>
                 </motion.div>
               )}

@@ -13,7 +13,7 @@ export async function getAllTeams() {
 
   const users = await UserModel.find(
     { uid: { $in: Array.from(uids) } },
-    "uid fullName gender avatarUrl bio department"
+    "uid fullName gender avatarUrl bio department userId"
   ).lean();
 
   const userMap = new Map(users.map(u => [u.uid, u]));
@@ -21,8 +21,8 @@ export async function getAllTeams() {
   return teams.map(t => ({
     ...t,
     id: (t as any)._id.toString(),
-    membersPopulated: t.members.map(m => userMap.get(m) || { uid: m, fullName: "Unknown User", gender: "Undeclared" }),
-    pendingRequestsPopulated: t.pendingRequests.map(p => userMap.get(p) || { uid: p, fullName: "Unknown User", gender: "Undeclared" })
+    membersPopulated: t.members.map(m => userMap.get(m) || { uid: m, fullName: "Unknown User", gender: "Undeclared", userId: "unknown" }),
+    pendingRequestsPopulated: t.pendingRequests.map(p => userMap.get(p) || { uid: p, fullName: "Unknown User", gender: "Undeclared", userId: "unknown" })
   }));
 }
 
@@ -173,4 +173,35 @@ export async function deleteTeam(teamId: string, creatorId: string) {
 
   await TeamModel.findByIdAndDelete(teamId);
   return { id: teamId, message: "Team deleted successfully" };
+}
+
+export async function transferTeamLead(teamId: string, currentLeadId: string, newLeadId: string) {
+  const team = await TeamModel.findById(teamId);
+  if (!team) {
+    throw new Error("Team not found");
+  }
+
+  if (team.creatorId !== currentLeadId) {
+    throw new Error("Unauthorized: Only the current Team Lead can transfer leadership");
+  }
+
+  if (!team.members.includes(newLeadId)) {
+    throw new Error("Target user must be a member of the team before transferring leadership");
+  }
+
+  if (currentLeadId === newLeadId) {
+    throw new Error("Cannot transfer leadership to yourself");
+  }
+
+  const newLeadUser = await UserModel.findOne({ uid: newLeadId });
+  if (!newLeadUser) {
+    throw new Error("Target user profile not found");
+  }
+
+  // Update team lead fields
+  team.creatorId = newLeadId;
+  team.creatorName = newLeadUser.fullName;
+
+  await team.save();
+  return team;
 }

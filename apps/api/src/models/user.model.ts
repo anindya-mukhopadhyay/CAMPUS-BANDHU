@@ -3,6 +3,7 @@ import { schemaOptions } from "./schema-options";
 
 export interface IUser {
   uid: string;
+  userId?: string;
   email: string;
   fullName: string;
   department: string;
@@ -54,6 +55,7 @@ export interface IUser {
 const userSchema = new Schema<IUser>(
   {
     uid: { type: String, required: true, unique: true, index: true },
+    userId: { type: String, unique: true, sparse: true, index: true },
     email: { type: String, required: true, lowercase: true },
     fullName: { type: String, required: true },
     department: { type: String, default: "Undeclared" },

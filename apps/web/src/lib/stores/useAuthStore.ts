@@ -27,6 +27,7 @@ export const ROLE_COLORS: Record<Role, string> = {
 
 export type ProfileData = {
   fullName: string;
+  userId?: string;
   department: string;
   graduationYear: number;
   bio: string;
@@ -157,6 +158,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
     const mockProfile: ProfileData = {
       fullName: "Mock Admin",
+      userId: role === "student" ? "mock_student" : role === "super_admin" ? "mock_super_admin" : "mock_college_admin",
       department: "Administration",
       graduationYear: 2024,
       bio: "Demo administration account.",

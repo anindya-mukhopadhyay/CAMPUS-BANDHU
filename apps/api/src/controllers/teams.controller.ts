@@ -116,3 +116,26 @@ export async function deleteTeam(request: Request, response: Response) {
     response.status(StatusCodes.BAD_REQUEST).json({ message: err.message });
   }
 }
+
+export async function transferTeamLead(request: Request, response: Response) {
+  const userId = (request as any).user?.uid;
+  if (!userId) {
+    response.status(StatusCodes.UNAUTHORIZED).json({ message: "Authentication required" });
+    return;
+  }
+
+  const { id } = request.params;
+  const { newLeadId } = request.body;
+
+  if (!newLeadId) {
+    response.status(StatusCodes.BAD_REQUEST).json({ message: "newLeadId is required" });
+    return;
+  }
+
+  try {
+    const data = await teamService.transferTeamLead(id as string, userId, newLeadId);
+    response.json(apiOk(data));
+  } catch (err: any) {
+    response.status(StatusCodes.BAD_REQUEST).json({ message: err.message });
+  }
+}

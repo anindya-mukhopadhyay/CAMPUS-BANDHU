@@ -5,12 +5,27 @@ import { firebaseAuth } from "../config/firebase-admin";
 import { UserModel } from "../models/user.model";
 import { apiOk } from "../utils/api-response";
 import { HttpError } from "../utils/http-error";
+import { generateUniqueUserId } from "../services/users.service";
 
 export async function signup(request: Request, response: Response) {
-  const { email, password, fullName, department, graduationYear } = request.body;
+  const { email, password, fullName, department, graduationYear, userId } = request.body;
 
   if (!email || !password || !fullName) {
     throw new HttpError(StatusCodes.BAD_REQUEST, "Missing required fields");
+  }
+
+  // Validate user ID if provided
+  let finalUserId = userId;
+  if (finalUserId) {
+    if (!/^[a-zA-Z0-9_]{3,30}$/.test(finalUserId)) {
+      throw new HttpError(StatusCodes.BAD_REQUEST, "User ID must be 3-30 alphanumeric characters or underscores");
+    }
+    const existing = await UserModel.findOne({ userId: finalUserId });
+    if (existing) {
+      throw new HttpError(StatusCodes.BAD_REQUEST, "User ID is already taken");
+    }
+  } else {
+    finalUserId = await generateUniqueUserId(fullName || "user");
   }
 
   try {
@@ -24,6 +39,7 @@ export async function signup(request: Request, response: Response) {
     // 2. Create User Profile in MongoDB
     const userProfile = await UserModel.create({
       uid: userRecord.uid,
+      userId: finalUserId,
       email,
       fullName,
       department: department || "Undeclared",
@@ -51,6 +67,12 @@ export async function login(request: Request, response: Response) {
   
   if (!userDoc) {
     throw new HttpError(StatusCodes.NOT_FOUND, "User profile not found");
+  }
+
+  // Populate legacy/Google users with a unique userId if they don't have one
+  if (!userDoc.userId) {
+    userDoc.userId = await generateUniqueUserId(userDoc.fullName || userDoc.email.split("@")[0] || "user");
+    await userDoc.save();
   }
 
   response.json(apiOk(userDoc.toJSON()));

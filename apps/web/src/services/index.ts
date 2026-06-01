@@ -55,4 +55,5 @@ export const teamService = {
   joinRequest: (id: string) => apiClient.post(`/teams/${id}/request`),
   acceptRequest: (id: string, requesterId: string) => apiClient.post(`/teams/${id}/accept`, { requesterId }),
   rejectRequest: (id: string, requesterId: string) => apiClient.post(`/teams/${id}/reject`, { requesterId }),
+  transferLead: (id: string, newLeadId: string) => apiClient.post(`/teams/${id}/transfer-lead`, { newLeadId }),
 };

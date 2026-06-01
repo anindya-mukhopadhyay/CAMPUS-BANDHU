@@ -115,6 +115,20 @@ export default function DiscoverPage() {
     }
   };
 
+  const handleTransferLead = async (teamId: string, newLeadId: string, newLeadName: string) => {
+    const message = `👑 Are you absolutely sure you want to transfer Team Lead status to "${newLeadName}"?\n\nYou will lose administrative control (edit, delete, accept requests) for this team. This action cannot be undone.`;
+    if (!window.confirm(message)) {
+      return;
+    }
+    try {
+      await teamService.transferLead(teamId, newLeadId);
+      alert(`✅ Leadership transferred to ${newLeadName} successfully!`);
+      await fetchTeams();
+    } catch (err: any) {
+      alert(err.response?.data?.message || "Failed to transfer team leadership.");
+    }
+  };
+
   // Chat Drawer states
   const [activeChatTeam, setActiveChatTeam] = useState<any | null>(null);
   const [isChatOpen, setIsChatOpen] = useState(false);
@@ -300,7 +314,16 @@ export default function DiscoverPage() {
                             <h3 className="font-semibold text-sm text-white">{team.name}</h3>
                             <span className="font-heading text-lg font-bold text-mint">{team.matchScore}%</span>
                           </div>
-                          <p className="text-xs text-slate mb-2 font-medium">{team.event} <span className="text-[10px] text-subtle">· by {team.creatorName}</span></p>
+                          <p className="text-xs text-slate mb-2 font-medium">
+                            {team.event}{" "}
+                            <span className="text-[10px] text-subtle">
+                              · by {team.creatorName}
+                              {(() => {
+                                const leadObj = team.membersPopulated?.find((m: any) => m.uid === team.creatorId);
+                                return leadObj?.userId && leadObj.userId !== "unknown" ? ` (@${leadObj.userId})` : "";
+                              })()}
+                            </span>
+                          </p>
                           
                           {/* Boys/Girls Criteria */}
                           <div className="mb-3 flex items-center gap-2">
@@ -382,6 +405,41 @@ export default function DiscoverPage() {
                               <span>Current members:</span>
                               <span className="font-semibold text-white">{team.members.length} members</span>
                             </div>
+
+                            {/* Render list of actual members with User IDs */}
+                            {team.membersPopulated && team.membersPopulated.length > 0 && (
+                              <div className="mt-1.5 mb-2 space-y-1.5 pl-1.5 border-l border-white/5">
+                                {team.membersPopulated.map((m: any) => {
+                                  const isMemberLead = m.uid === team.creatorId;
+                                  return (
+                                    <div key={m.uid} className="flex items-center justify-between py-0.5">
+                                      <span className="text-[10px] text-white/80 font-medium truncate max-w-[170px] flex items-center gap-1">
+                                        <span className="w-1 h-1 rounded-full bg-slate/40 shrink-0" />
+                                        {m.fullName}{" "}
+                                        {m.userId && m.userId !== "unknown" ? (
+                                          <span className="text-accent text-[9px] font-semibold">@{m.userId}</span>
+                                        ) : ""}
+                                        {isMemberLead && (
+                                          <span className="text-[8px] px-1 bg-purple/10 border border-purple/30 text-purple rounded font-bold">Lead</span>
+                                        )}
+                                      </span>
+
+                                      {/* Transfer Team Lead option */}
+                                      {isCreator && !isMemberLead && (
+                                        <button
+                                          onClick={() => handleTransferLead(team.id, m.uid, m.fullName)}
+                                          className="px-1.5 py-0.5 rounded bg-purple/10 hover:bg-purple/25 text-purple border border-purple/20 text-[8px] font-semibold transition-all cursor-pointer"
+                                          title="Transfer Team Lead"
+                                        >
+                                          Make Lead
+                                        </button>
+                                      )}
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            )}
+
                             <div className="flex justify-between">
                               <span>Members needed:</span>
                               <span className="font-semibold text-accent">{team.membersNeeded} open slots</span>

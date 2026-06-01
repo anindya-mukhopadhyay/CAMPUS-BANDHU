@@ -3,6 +3,7 @@ import UserModel from "../models/user.model";
 
 const profileSchema = z.object({
   fullName: z.string().min(3),
+  userId: z.string().min(3).max(30).regex(/^[a-zA-Z0-9_]+$/).optional(),
   email: z.string().email().optional(),
   department: z.string().min(2),
   graduationYear: z.number().min(2000).max(2100),
@@ -46,12 +47,33 @@ const profileSchema = z.object({
   skillLevels: z.record(z.string(), z.number()).optional()
 });
 
+export async function generateUniqueUserId(base: string): Promise<string> {
+  const cleanBase = base.toLowerCase().replace(/[^a-z0-9_]/g, "_").substring(0, 20);
+  let candidate = cleanBase || "user";
+  
+  let exists = await UserModel.findOne({ userId: candidate });
+  if (!exists) return candidate;
+  
+  let count = 1;
+  while (true) {
+    const suffix = count.toString();
+    const truncatedBase = cleanBase.substring(0, 30 - suffix.length - 1);
+    candidate = `${truncatedBase}_${suffix}`;
+    exists = await UserModel.findOne({ userId: candidate });
+    if (!exists) return candidate;
+    count++;
+  }
+}
+
 export async function getProfileById(userId: string): Promise<Record<string, unknown>> {
   const user = await UserModel.findOne({ uid: userId });
   if (!user) {
+    const email = `${userId.substring(0, 8)}@campus.edu`;
+    const defaultHandle = await generateUniqueUserId(userId.substring(0, 8));
     const defaults = {
       uid: userId,
-      email: `${userId.substring(0, 8)}@campus.edu`, // Mock email placeholder
+      userId: defaultHandle,
+      email,
       fullName: "New User",
       department: "Undeclared",
       graduationYear: new Date().getFullYear() + 4,

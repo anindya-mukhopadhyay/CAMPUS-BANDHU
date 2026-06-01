@@ -46,3 +46,9 @@ teamsRouter.delete(
   requireAuth,
   asyncHandler(teamsController.deleteTeam)
 );
+
+teamsRouter.post(
+  "/:id/transfer-lead",
+  requireAuth,
+  asyncHandler(teamsController.transferTeamLead)
+);
