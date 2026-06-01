@@ -12,9 +12,9 @@
 
   /* Core palette */
   --color-base: 0 0 0;
-  --color-surface: 9 9 11;
-  --color-panel: 24 24 27;
-  --color-elevated: 39 39 42;
+  --color-surface: 0 0 0;
+  --color-panel: 0 0 0;
+  --color-elevated: 12 12 12;
 
   /* Accent spectrum */
   --color-accent: 255 255 255;
@@ -90,13 +90,7 @@ body {
   @apply text-white antialiased;
   min-height: 100vh;
   font-family: var(--font-body), system-ui, sans-serif;
-  background: rgb(var(--color-base));
-  background-image:
-    radial-gradient(circle at 15% 15%, rgb(var(--color-accent) / 0.05), transparent 40%),
-    radial-gradient(circle at 85% 5%, rgb(var(--color-purple) / 0.03), transparent 45%),
-    radial-gradient(circle at 50% 80%, rgb(var(--color-electric) / 0.02), transparent 50%),
-    linear-gradient(180deg, rgb(var(--color-base)) 0%, rgb(var(--color-surface) / 0.5) 100%);
-  background-attachment: fixed;
+  background: #000000;
 }
 
 /* Custom scrollbar */
