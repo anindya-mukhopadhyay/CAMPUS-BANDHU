@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Calendar, Flame,
-  ArrowRight, Sparkles, BookOpen, Code, Palette, Mic, Plus, Users, MessageSquare, Send, X, ShieldAlert
+  ArrowRight, Sparkles, BookOpen, Code, Palette, Mic, Plus, Users, MessageSquare, Send, X, ShieldAlert, Settings, Trash2
 } from "lucide-react";
 
 import { AppShell } from "@/components/layout/AppShell";
@@ -60,6 +60,61 @@ export default function DiscoverPage() {
   // Interactive Hover Skills Overlap state
   const [hoveredTeamId, setHoveredTeamId] = useState<string | null>(null);
 
+  // Edit / Delete states & handlers
+  const [editingTeamId, setEditingTeamId] = useState<string | null>(null);
+
+  const handleCreateTeamClick = () => {
+    setEditingTeamId(null);
+    setNewTeam({
+      teamName: "",
+      event: "",
+      skills: "",
+      roles: "",
+      boysCriteria: 1,
+      girlsCriteria: 1
+    });
+    setIsCreateModalOpen(true);
+  };
+
+  const handleEditTeamClick = (team: any) => {
+    setEditingTeamId(team.id);
+    setNewTeam({
+      teamName: team.name,
+      event: team.event,
+      skills: team.skills.join(", "),
+      roles: team.need.join(", "),
+      boysCriteria: team.boysCriteria,
+      girlsCriteria: team.girlsCriteria
+    });
+    setIsCreateModalOpen(true);
+  };
+
+  const handleCloseCreateModal = () => {
+    setIsCreateModalOpen(false);
+    setEditingTeamId(null);
+    setNewTeam({
+      teamName: "",
+      event: "",
+      skills: "",
+      roles: "",
+      boysCriteria: 1,
+      girlsCriteria: 1
+    });
+  };
+
+  const handleDeleteTeamClick = async (teamId: string) => {
+    if (!window.confirm("⚠️ Are you sure you want to delete this team? This action cannot be undone.")) {
+      return;
+    }
+    try {
+      await teamService.delete(teamId);
+      alert("✅ Team deleted successfully!");
+      await fetchTeams();
+    } catch (err: any) {
+      alert(err.response?.data?.message || "Failed to delete team.");
+    }
+  };
+
   // Chat Drawer states
   const [activeChatTeam, setActiveChatTeam] = useState<any | null>(null);
   const [isChatOpen, setIsChatOpen] = useState(false);
@@ -100,22 +155,18 @@ export default function DiscoverPage() {
         girlsCriteria: Number(newTeam.girlsCriteria) || 0
       };
 
-      await teamService.create(payload);
-      setIsCreateModalOpen(false);
-      
-      // Reset Form
-      setNewTeam({
-        teamName: "",
-        event: "",
-        skills: "",
-        roles: "",
-        boysCriteria: 1,
-        girlsCriteria: 1
-      });
+      if (editingTeamId) {
+        await teamService.update(editingTeamId, payload);
+        alert("✅ Team updated successfully!");
+      } else {
+        await teamService.create(payload);
+        alert("✅ Team created successfully!");
+      }
 
+      handleCloseCreateModal();
       await fetchTeams();
     } catch (err: any) {
-      alert(err.response?.data?.message || "Failed to create team.");
+      alert(err.response?.data?.message || `Failed to ${editingTeamId ? 'update' : 'create'} team.`);
     }
   };
 
@@ -206,7 +257,7 @@ export default function DiscoverPage() {
                   <NeonBadge color="purple" size="sm" pulse>Smart Match</NeonBadge>
                 </div>
                 <button
-                  onClick={() => setIsCreateModalOpen(true)}
+                  onClick={handleCreateTeamClick}
                   className="inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-purple to-accent px-4 py-2 text-xs font-semibold text-white shadow-neon hover:shadow-glow-md transition-shadow cursor-pointer"
                 >
                   <Plus className="h-4 w-4" /> Create Team
@@ -346,8 +397,24 @@ export default function DiscoverPage() {
                           {/* Member Request flow buttons */}
                           <div className="flex gap-2">
                             {isCreator ? (
-                              <div className="flex-1 text-center py-1.5 bg-purple/10 border border-purple/20 rounded-lg text-purple font-semibold text-xs">
-                                Team Admin
+                              <div className="flex flex-1 gap-1.5">
+                                <div className="flex-1 text-center py-1.5 bg-purple/10 border border-purple/20 rounded-lg text-purple font-semibold text-xs flex items-center justify-center">
+                                  Team Admin
+                                </div>
+                                <button
+                                  onClick={() => handleEditTeamClick(team)}
+                                  className="px-2.5 rounded-lg border border-white/10 bg-white/[0.04] hover:bg-accent/15 hover:border-accent/30 hover:text-accent transition-colors cursor-pointer text-slate flex items-center justify-center"
+                                  title="Edit Team"
+                                >
+                                  <Settings className="h-3.5 w-3.5" />
+                                </button>
+                                <button
+                                  onClick={() => handleDeleteTeamClick(team.id)}
+                                  className="px-2.5 rounded-lg border border-rose/30 bg-rose/10 hover:bg-rose/25 hover:text-rose transition-colors cursor-pointer text-rose/80 flex items-center justify-center"
+                                  title="Delete Team"
+                                >
+                                  <Trash2 className="h-3.5 w-3.5" />
+                                </button>
                               </div>
                             ) : isMember ? (
                               <div className="flex-1 text-center py-1.5 bg-mint/10 border border-mint/20 rounded-lg text-mint font-semibold text-xs">
@@ -487,8 +554,8 @@ export default function DiscoverPage() {
       {/* Create Team Modal */}
       <Modal 
         open={isCreateModalOpen} 
-        onClose={() => setIsCreateModalOpen(false)} 
-        title="Create New Team"
+        onClose={handleCloseCreateModal} 
+        title={editingTeamId ? "Edit Team Details" : "Create New Team"}
       >
         <form onSubmit={handleCreateTeamSubmit} className="space-y-4 p-1">
           <Input
@@ -539,7 +606,7 @@ export default function DiscoverPage() {
             type="submit"
             className="w-full mt-4 rounded-xl bg-gradient-to-r from-purple to-accent py-3 text-sm font-semibold text-white shadow-neon hover:brightness-110 transition-all cursor-pointer"
           >
-            Form Team
+            {editingTeamId ? "Save Changes" : "Form Team"}
           </button>
         </form>
       </Modal>

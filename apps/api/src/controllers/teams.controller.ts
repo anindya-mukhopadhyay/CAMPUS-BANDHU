@@ -84,3 +84,35 @@ export async function rejectRequest(request: Request, response: Response) {
     response.status(StatusCodes.BAD_REQUEST).json({ message: err.message });
   }
 }
+
+export async function updateTeam(request: Request, response: Response) {
+  const userId = (request as any).user?.uid;
+  if (!userId) {
+    response.status(StatusCodes.UNAUTHORIZED).json({ message: "Authentication required" });
+    return;
+  }
+
+  const { id } = request.params;
+  try {
+    const data = await teamService.updateTeam(id as string, userId, request.body);
+    response.json(apiOk(data));
+  } catch (err: any) {
+    response.status(StatusCodes.BAD_REQUEST).json({ message: err.message });
+  }
+}
+
+export async function deleteTeam(request: Request, response: Response) {
+  const userId = (request as any).user?.uid;
+  if (!userId) {
+    response.status(StatusCodes.UNAUTHORIZED).json({ message: "Authentication required" });
+    return;
+  }
+
+  const { id } = request.params;
+  try {
+    const data = await teamService.deleteTeam(id as string, userId);
+    response.json(apiOk(data));
+  } catch (err: any) {
+    response.status(StatusCodes.BAD_REQUEST).json({ message: err.message });
+  }
+}

@@ -34,3 +34,15 @@ teamsRouter.post(
   requireAuth,
   asyncHandler(teamsController.rejectRequest)
 );
+
+teamsRouter.patch(
+  "/:id",
+  requireAuth,
+  asyncHandler(teamsController.updateTeam)
+);
+
+teamsRouter.delete(
+  "/:id",
+  requireAuth,
+  asyncHandler(teamsController.deleteTeam)
+);

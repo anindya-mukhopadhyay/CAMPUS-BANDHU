@@ -122,3 +122,55 @@ export async function rejectJoinRequest(teamId: string, creatorId: string, reque
   await team.save();
   return team;
 }
+
+export async function updateTeam(
+  teamId: string,
+  creatorId: string,
+  payload: {
+    name?: string;
+    event?: string;
+    skills?: string[];
+    need?: string[];
+    boysCriteria?: number;
+    girlsCriteria?: number;
+  }
+) {
+  const team = await TeamModel.findById(teamId);
+  if (!team) {
+    throw new Error("Team not found");
+  }
+
+  if (team.creatorId !== creatorId) {
+    throw new Error("Unauthorized: Only the team creator can edit the team");
+  }
+
+  if (payload.name) team.name = payload.name;
+  if (payload.event) team.event = payload.event;
+  if (payload.skills) team.skills = payload.skills;
+  if (payload.need) team.need = payload.need;
+  
+  if (payload.boysCriteria !== undefined) team.boysCriteria = Number(payload.boysCriteria) || 0;
+  if (payload.girlsCriteria !== undefined) team.girlsCriteria = Number(payload.girlsCriteria) || 0;
+  
+  // Recalculate membersNeeded as total criteria minus current members other than creator
+  const currentOtherMembersCount = Math.max(0, team.members.length - 1);
+  const totalSlotsNeeded = team.boysCriteria + team.girlsCriteria;
+  team.membersNeeded = Math.max(0, totalSlotsNeeded - currentOtherMembersCount);
+
+  await team.save();
+  return team;
+}
+
+export async function deleteTeam(teamId: string, creatorId: string) {
+  const team = await TeamModel.findById(teamId);
+  if (!team) {
+    throw new Error("Team not found");
+  }
+
+  if (team.creatorId !== creatorId) {
+    throw new Error("Unauthorized: Only the team creator can delete the team");
+  }
+
+  await TeamModel.findByIdAndDelete(teamId);
+  return { id: teamId, message: "Team deleted successfully" };
+}
