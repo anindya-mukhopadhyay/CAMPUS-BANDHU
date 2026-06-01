@@ -26,18 +26,18 @@ const config: Config = {
         subtle: "rgb(var(--color-text-subtle) / <alpha-value>)"
       },
       boxShadow: {
-        soft: "0 20px 60px rgba(0, 0, 0, 0.85)",
-        neon: "0 0 0 1px rgba(255, 255, 255, 0.2)",
-        "neon-purple": "0 0 0 1px rgba(255, 255, 255, 0.15)",
-        "neon-cyan": "0 0 0 1px rgba(255, 255, 255, 0.12)",
-        "glow-sm": "0 0 0 1px rgba(255, 255, 255, 0.08)",
-        "glow-md": "0 0 0 1px rgba(255, 255, 255, 0.15)",
-        "glow-lg": "0 0 0 1px rgba(255, 255, 255, 0.2)",
-        float: "0 30px 80px rgba(0, 0, 0, 0.85)"
+        soft: "0 20px 60px rgba(0, 0, 0, 0.35)",
+        neon: "0 0 35px rgba(0, 212, 255, 0.35)",
+        "neon-purple": "0 0 35px rgba(139, 92, 246, 0.35)",
+        "neon-cyan": "0 0 35px rgba(34, 211, 238, 0.35)",
+        "glow-sm": "0 0 15px rgba(0, 212, 255, 0.15)",
+        "glow-md": "0 0 30px rgba(0, 212, 255, 0.2)",
+        "glow-lg": "0 0 60px rgba(0, 212, 255, 0.25)",
+        float: "0 30px 80px rgba(0, 0, 0, 0.45), 0 0 40px rgba(0, 212, 255, 0.05)"
       },
       backgroundImage: {
         "mesh-grid":
-          "linear-gradient(180deg, rgb(0, 0, 0) 0%, rgb(0, 0, 0) 100%)",
+          "radial-gradient(circle at 15% 15%, rgba(0, 212, 255, 0.12), transparent 40%), radial-gradient(circle at 85% 5%, rgba(139, 92, 246, 0.10), transparent 45%), radial-gradient(circle at 50% 80%, rgba(0, 102, 255, 0.06), transparent 50%), linear-gradient(180deg, rgb(5, 11, 24) 0%, rgba(11, 22, 45, 0.5) 100%)",
         "gradient-radial": "radial-gradient(circle at center, var(--tw-gradient-stops))",
         "gradient-conic": "conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))",
         shimmer: "linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.04) 50%, transparent 100%)"

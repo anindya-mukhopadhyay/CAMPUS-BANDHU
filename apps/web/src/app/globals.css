@@ -11,24 +11,24 @@
   color-scheme: dark;
 
   /* Core palette */
-  --color-base: 0 0 0;
-  --color-surface: 0 0 0;
-  --color-panel: 0 0 0;
-  --color-elevated: 12 12 12;
+  --color-base: 5 11 24;
+  --color-surface: 11 22 45;
+  --color-panel: 14 28 56;
+  --color-elevated: 20 36 68;
 
   /* Accent spectrum */
-  --color-accent: 255 255 255;
-  --color-electric: 244 244 245;
-  --color-purple: 212 212 216;
-  --color-cyan: 161 161 170;
-  --color-mint: 255 255 255;
-  --color-blaze: 255 255 255;
-  --color-rose: 161 161 170;
+  --color-accent: 0 212 255;
+  --color-electric: 0 102 255;
+  --color-purple: 139 92 246;
+  --color-cyan: 34 211 238;
+  --color-mint: 56 242 181;
+  --color-blaze: 255 122 24;
+  --color-rose: 244 63 94;
 
   /* Typography */
   --color-text: 255 255 255;
-  --color-text-muted: 161 161 170;
-  --color-text-subtle: 113 113 122;
+  --color-text-muted: 144 163 194;
+  --color-text-subtle: 100 116 139;
 
   /* Borders */
   --color-border: 255 255 255;
@@ -90,7 +90,13 @@ body {
   @apply text-white antialiased;
   min-height: 100vh;
   font-family: var(--font-body), system-ui, sans-serif;
-  background: #000000;
+  background: rgb(var(--color-base));
+  background-image:
+    radial-gradient(circle at 15% 15%, rgb(var(--color-accent) / 0.12), transparent 40%),
+    radial-gradient(circle at 85% 5%, rgb(var(--color-purple) / 0.10), transparent 45%),
+    radial-gradient(circle at 50% 80%, rgb(var(--color-electric) / 0.06), transparent 50%),
+    linear-gradient(180deg, rgb(var(--color-base)) 0%, rgb(var(--color-surface) / 0.5) 100%);
+  background-attachment: fixed;
 }
 
 /* Custom scrollbar */
@@ -181,16 +187,18 @@ body {
   .kicker {
     @apply inline-flex items-center gap-2 rounded-full px-3.5 py-1.5 text-xs font-semibold uppercase tracking-[0.2em];
     background: rgb(var(--color-accent) / 0.1);
-    border: 1px solid rgb(var(--color-accent) / 0.2);
+    border: 1px solid rgb(var(--color-accent) / 0.3);
     color: rgb(var(--color-accent));
   }
 
   /* ─── Grid Background ────────────────────────────────── */
   .grid-background {
     background-image:
-      linear-gradient(rgb(var(--color-border) / 0.05) 1px, transparent 1px),
-      linear-gradient(90deg, rgb(var(--color-border) / 0.05) 1px, transparent 1px);
+      linear-gradient(rgb(var(--color-border) / 0.06) 1px, transparent 1px),
+      linear-gradient(90deg, rgb(var(--color-border) / 0.06) 1px, transparent 1px);
     background-size: 50px 50px;
+    mask-image: radial-gradient(circle at center, black 30%, transparent 75%);
+    -webkit-mask-image: radial-gradient(circle at center, black 30%, transparent 75%);
   }
 
   /* ─── Floating Card Animation ─────────────────────────── */
