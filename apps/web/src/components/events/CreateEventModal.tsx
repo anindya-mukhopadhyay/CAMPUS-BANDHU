@@ -19,9 +19,60 @@ export function CreateEventModal({ isOpen, onClose }: { isOpen: boolean; onClose
     image: "https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=600&q=80"
   });
 
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { profile } = useAuthStore();
   const { addEvent } = useEventStore();
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      alert("Please select an image file (PNG, JPG, or WEBP).");
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      alert("File size must be under 5MB.");
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result === "string") {
+        setImagePreview(reader.result);
+        setFormData(prev => ({ ...prev, image: reader.result as string }));
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleRemoveImage = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setImagePreview(null);
+    setFormData(prev => ({
+      ...prev,
+      image: "https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=600&q=80"
+    }));
+  };
+
+  const handleClose = () => {
+    setImagePreview(null);
+    setFormData({
+      title: "",
+      description: "",
+      date: "",
+      time: "",
+      location: "",
+      category: "Hackathon",
+      maxAttendees: "",
+      tags: "",
+      image: "https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=600&q=80"
+    });
+    onClose();
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -30,14 +81,14 @@ export function CreateEventModal({ isOpen, onClose }: { isOpen: boolean; onClose
       const payload = {
         ...formData,
         maxAttendees: parseInt(formData.maxAttendees) || 100,
-        tags: formData.tags.split(",").map(t => t.trim()),
+        tags: formData.tags.split(",").map(t => t.trim()).filter(Boolean),
         organizer: profile?.fullName || "Admin",
         featured: false
       };
       
       const response = await eventService.create(payload);
       addEvent(response.data);
-      onClose();
+      handleClose();
     } catch (error) {
       console.error("Failed to create event:", error);
     } finally {
@@ -46,13 +97,49 @@ export function CreateEventModal({ isOpen, onClose }: { isOpen: boolean; onClose
   };
 
   return (
-    <Modal open={isOpen} onClose={onClose} title="Create New Event">
+    <Modal open={isOpen} onClose={handleClose} title="Create New Event">
       <form onSubmit={handleSubmit} className="space-y-4">
-        {/* Poster Upload (Mock) */}
-        <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-white/20 bg-white/[0.02] p-6 transition-colors hover:bg-white/[0.04]">
-          <ImageIcon className="mb-2 h-8 w-8 text-slate" />
-          <p className="text-sm font-medium text-white">Upload Event Poster</p>
-          <p className="text-xs text-slate">PNG, JPG, or WEBP (Max 5MB)</p>
+        {/* Poster Upload */}
+        <div className="relative">
+          <input
+            type="file"
+            accept="image/png, image/jpeg, image/webp animate-pulse"
+            id="poster-upload"
+            className="hidden"
+            onChange={handleImageChange}
+          />
+          {imagePreview ? (
+            <div className="relative group overflow-hidden rounded-xl border border-white/10 h-40 w-full bg-black/40 flex items-center justify-center">
+              <img
+                src={imagePreview}
+                alt="Event Poster Preview"
+                className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+              />
+              <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
+                <label
+                  htmlFor="poster-upload"
+                  className="px-3.5 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 border border-white/20 text-white text-xs font-semibold cursor-pointer transition-colors"
+                >
+                  Change Image
+                </label>
+                <button
+                  onClick={handleRemoveImage}
+                  className="px-3.5 py-1.5 rounded-lg bg-rose/25 hover:bg-rose/40 border border-rose/30 text-rose text-xs font-semibold cursor-pointer transition-colors animate-fade-in"
+                >
+                  Remove
+                </button>
+              </div>
+            </div>
+          ) : (
+            <label
+              htmlFor="poster-upload"
+              className="flex flex-col items-center justify-center rounded-xl border border-dashed border-white/20 bg-white/[0.02] p-6 transition-colors hover:bg-white/[0.04] cursor-pointer"
+            >
+              <ImageIcon className="mb-2 h-8 w-8 text-slate animate-pulse" />
+              <p className="text-sm font-medium text-white">Upload Event Poster</p>
+              <p className="text-xs text-slate">PNG, JPG, or WEBP (Max 5MB)</p>
+            </label>
+          )}
         </div>
 
         <Input 
