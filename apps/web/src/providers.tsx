@@ -28,7 +28,18 @@ export function Providers({ children }: ProvidersProps) {
   useEffect(() => {
     void initAnalytics();
 
+    // Fallback: Ensure loading state is cleared if Firebase hangs
+    const loadingTimeout = setTimeout(() => {
+      if (useAuthStore.getState().isLoading) {
+        console.warn("Auth initialization fallback timeout reached. Setting isLoading to false.");
+        useAuthStore.setState({ isLoading: false });
+      }
+    }, 2500);
+
     const unsubscribe = subscribeAuth(async (user) => {
+      // Clear timeout as soon as auth responds
+      clearTimeout(loadingTimeout);
+
       useAuthStore.getState().setUser(user);
       if (user) {
         try {
@@ -36,6 +47,7 @@ export function Providers({ children }: ProvidersProps) {
           await useAuthStore.getState().initializeProfile(user);
         } catch (error) {
           console.error("Auth provider initialization error:", error);
+          useAuthStore.setState({ isLoading: false });
         }
       } else {
         useAuthStore.getState().setProfile(null);
@@ -43,7 +55,10 @@ export function Providers({ children }: ProvidersProps) {
       }
     });
 
-    return () => unsubscribe();
+    return () => {
+      clearTimeout(loadingTimeout);
+      unsubscribe();
+    };
   }, []);
 
   return (
