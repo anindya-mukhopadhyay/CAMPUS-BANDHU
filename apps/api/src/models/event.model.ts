@@ -59,7 +59,7 @@ const eventSchema = new Schema<IEvent>(
 );
 
 // Compatibility synchronization hook
-eventSchema.pre("save", function (this: any, next: any) {
+eventSchema.pre("save", function (this: any) {
   // Sync Dates
   if (this.startAt && !this.date) {
     this.date = this.startAt.toISOString();
@@ -107,8 +107,6 @@ eventSchema.pre("save", function (this: any, next: any) {
   if (!this.organizer && this.organizerName) {
     this.organizer = this.organizerName;
   }
-
-  next();
 });
 
 export const EventModel = model<IEvent>("Event", eventSchema);

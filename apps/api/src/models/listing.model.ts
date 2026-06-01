@@ -34,7 +34,7 @@ const listingSchema = new Schema<IListing>(
   schemaOptions
 );
 
-listingSchema.pre("save", function (this: any, next: any) {
+listingSchema.pre("save", function (this: any) {
   // Sync image / imageUrl
   if (this.imageUrl && !this.image) {
     this.image = this.imageUrl;
@@ -46,7 +46,6 @@ listingSchema.pre("save", function (this: any, next: any) {
   if (this.status === "available") {
     this.status = "active";
   }
-  next();
 });
 
 export const ListingModel = model<IListing>("Listing", listingSchema);

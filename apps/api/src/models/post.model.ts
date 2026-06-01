@@ -30,7 +30,7 @@ const postSchema = new Schema<IPost>(
   schemaOptions
 );
 
-postSchema.pre("save", function (this: any, next: any) {
+postSchema.pre("save", function (this: any) {
   if (this.likes !== undefined && this.likesCount === 0) {
     this.likesCount = this.likes;
   }
@@ -43,7 +43,6 @@ postSchema.pre("save", function (this: any, next: any) {
   if (this.commentsCount !== undefined && this.comments === 0) {
     this.comments = this.commentsCount;
   }
-  next();
 });
 
 export const PostModel = model<IPost>("Post", postSchema);

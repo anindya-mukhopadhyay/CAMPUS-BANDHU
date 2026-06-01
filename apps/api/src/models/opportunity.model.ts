@@ -40,7 +40,7 @@ const opportunitySchema = new Schema<IOpportunity>(
   schemaOptions
 );
 
-opportunitySchema.pre("save", function (this: any, next: any) {
+opportunitySchema.pre("save", function (this: any) {
   // Sync role / title
   if (this.role && !this.title) {
     this.title = this.role;
@@ -64,8 +64,6 @@ opportunitySchema.pre("save", function (this: any, next: any) {
   if (!this.stipendOrCtc && this.salary) {
     this.stipendOrCtc = this.salary;
   }
-
-  next();
 });
 
 export const OpportunityModel = model<IOpportunity>("Opportunity", opportunitySchema);
