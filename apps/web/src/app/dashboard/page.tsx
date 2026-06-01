@@ -162,7 +162,7 @@ const stagger = {
 };
 
 export default function DashboardPage() {
-  const { profile, updateProfile } = useAuthStore();
+  const { profile, user, updateProfile } = useAuthStore();
 
   // MCQ Skill Assessment States
   const [activeSkill, setActiveSkill] = useState<string | null>(null);
@@ -281,7 +281,7 @@ export default function DashboardPage() {
             <div className="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full bg-accent/10 blur-[60px]" />
             <div className="relative flex items-center gap-4">
               <Avatar
-                src={null}
+                src={profile?.avatarUrl || user?.photoURL}
                 name={profile?.fullName || "Student"}
                 size="xl"
                 status="online"
