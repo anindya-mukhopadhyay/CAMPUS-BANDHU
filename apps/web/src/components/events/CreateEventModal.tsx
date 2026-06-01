@@ -76,6 +76,17 @@ export function CreateEventModal({ isOpen, onClose }: { isOpen: boolean; onClose
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (formData.title.trim().length < 3) {
+      alert("⚠️ Event Title must be at least 3 characters long.");
+      return;
+    }
+
+    if (formData.description.trim().length < 10) {
+      alert("⚠️ Event Description must be at least 10 characters long.");
+      return;
+    }
+
     setIsSubmitting(true);
     try {
       const payload = {
@@ -144,18 +155,20 @@ export function CreateEventModal({ isOpen, onClose }: { isOpen: boolean; onClose
 
         <Input 
           label="Event Title" 
-          placeholder="Enter event name" 
+          placeholder="Enter event name (At least 3 characters)" 
           value={formData.title} 
           onChange={(e) => setFormData({ ...formData, title: e.target.value })} 
           required 
+          minLength={3}
         />
 
         <div>
           <label className="mb-1.5 block text-xs font-medium text-slate">Description</label>
           <textarea
             required
+            minLength={10}
             className="h-24 w-full rounded-xl border border-white/10 bg-white/[0.04] p-3 text-sm text-white placeholder:text-subtle transition-colors focus:border-accent/50 focus:outline-none focus:ring-1 focus:ring-accent/30"
-            placeholder="What is this event about?"
+            placeholder="What is this event about? (At least 10 characters)"
             value={formData.description}
             onChange={(e) => setFormData({ ...formData, description: e.target.value })}
           />
