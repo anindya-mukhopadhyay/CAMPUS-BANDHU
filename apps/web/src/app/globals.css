@@ -11,24 +11,24 @@
   color-scheme: dark;
 
   /* Core palette */
-  --color-base: 5 11 24;
-  --color-surface: 11 22 45;
-  --color-panel: 14 28 56;
-  --color-elevated: 20 36 68;
+  --color-base: 10 10 12;
+  --color-surface: 18 18 20;
+  --color-panel: 28 28 32;
+  --color-elevated: 38 38 42;
 
   /* Accent spectrum */
-  --color-accent: 0 212 255;
-  --color-electric: 0 102 255;
-  --color-purple: 139 92 246;
-  --color-cyan: 34 211 238;
-  --color-mint: 56 242 181;
-  --color-blaze: 255 122 24;
+  --color-accent: 220 38 38;
+  --color-electric: 153 27 27;
+  --color-purple: 190 24 74;
+  --color-cyan: 148 163 184;
+  --color-mint: 16 185 129;
+  --color-blaze: 239 68 68;
   --color-rose: 244 63 94;
 
   /* Typography */
   --color-text: 255 255 255;
-  --color-text-muted: 144 163 194;
-  --color-text-subtle: 100 116 139;
+  --color-text-muted: 161 161 170;
+  --color-text-subtle: 113 113 122;
 
   /* Borders */
   --color-border: 255 255 255;
