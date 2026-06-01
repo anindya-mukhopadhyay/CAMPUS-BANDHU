@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils/cn";
 type GlassCardProps = {
   children: ReactNode;
   className?: string;
-  variant?: "default" | "strong" | "subtle" | "holographic";
+  variant?: "default" | "strong" | "subtle" | "holographic" | "liquid";
   hover?: boolean;
   glow?: "none" | "blue" | "purple" | "cyan" | "mint";
   padding?: "sm" | "md" | "lg";
@@ -40,7 +40,7 @@ export function GlassCard({
       className={cn(
         "rounded-2xl transition-all duration-300",
         paddingMap[padding],
-        variant === "default" && "glass",
+        (variant === "default" || variant === "liquid") && "glass",
         variant === "strong" && "glass-strong",
         variant === "subtle" && "glass-subtle",
         variant === "holographic" && "glass holographic",

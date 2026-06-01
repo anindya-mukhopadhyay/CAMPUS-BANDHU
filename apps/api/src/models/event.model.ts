@@ -16,6 +16,9 @@ export interface IEvent {
   organizerName?: string;
   imageUrl?: string;
   featured: boolean;
+  status: "active" | "pending" | "rejected";
+  scope: "local" | "global";
+  collegeId?: string;
 
   // Compatibility fields
   date?: string;
@@ -45,6 +48,9 @@ const eventSchema = new Schema<IEvent>(
     organizerName: { type: String },
     imageUrl: { type: String },
     featured: { type: Boolean, default: false },
+    status: { type: String, enum: ["active", "pending", "rejected"], default: "active" },
+    scope: { type: String, enum: ["local", "global"], default: "local" },
+    collegeId: { type: String, index: true },
 
     // Compatibility fields
     date: { type: String },

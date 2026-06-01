@@ -8,7 +8,7 @@ import { HttpError } from "../utils/http-error";
 import { generateUniqueUserId } from "../services/users.service";
 
 export async function signup(request: Request, response: Response) {
-  const { email, password, fullName, department, graduationYear, userId } = request.body;
+  const { email, password, fullName, department, graduationYear, userId, role } = request.body;
 
   if (!email || !password || !fullName) {
     throw new HttpError(StatusCodes.BAD_REQUEST, "Missing required fields");
@@ -28,6 +28,10 @@ export async function signup(request: Request, response: Response) {
     finalUserId = await generateUniqueUserId(fullName || "user");
   }
 
+  const allowedRoles = ["student", "recruiter", "college_admin", "super_admin", "faculty"];
+  const finalRole = allowedRoles.includes(role) ? role : "student";
+  const finalStatus = ["recruiter", "college_admin", "super_admin", "faculty"].includes(finalRole) ? "pending" : "active";
+
   try {
     // 1. Create Firebase Auth User
     const userRecord = await firebaseAuth.createUser({
@@ -44,7 +48,8 @@ export async function signup(request: Request, response: Response) {
       fullName,
       department: department || "Undeclared",
       graduationYear: graduationYear || new Date().getFullYear() + 4,
-      role: "student"
+      role: finalRole,
+      status: finalStatus
     });
 
     response.status(StatusCodes.CREATED).json(apiOk(userProfile.toJSON()));

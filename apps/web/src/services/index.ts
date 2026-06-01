@@ -29,9 +29,12 @@ export const userService = {
 };
 
 export const feedService = {
-  getAll: () => apiClient.get("/feed"),
-  create: (content: string) => apiClient.post("/feed", { content }),
+  getAll: (page?: number) => apiClient.get(`/feed${page ? `?page=${page}` : ""}`),
+  create: (content: string, image?: string) => apiClient.post("/feed", { content, image }),
   like: (id: string) => apiClient.post(`/feed/${id}/like`),
+  addComment: (id: string, content: string) => apiClient.post(`/feed/${id}/comments`, { content }),
+  deleteComment: (postId: string, commentId: string) => apiClient.delete(`/feed/${postId}/comments/${commentId}`),
+  delete: (id: string) => apiClient.delete(`/feed/${id}`),
 };
 
 export const chatService = {
@@ -42,9 +45,24 @@ export const chatService = {
 
 export const adminService = {
   getAnalytics: () => apiClient.get("/admin/analytics"),
+  getUsers: () => apiClient.get("/admin/users"),
   moderateUser: (userId: string, action: string) => apiClient.post("/admin/moderate", { userId, action }),
   postAnnouncement: (data: any) => apiClient.post("/admin/announcement", data),
   seed: () => apiClient.post("/admin/seed"),
+  getColleges: () => apiClient.get("/admin/colleges"),
+  createCollege: (data: { name: string; code: string }) => apiClient.post("/admin/colleges", data),
+  moderateCollege: (code: string, action: "approve" | "reject") => apiClient.post("/admin/colleges/moderate", { code, action }),
+  getPendingEvents: () => apiClient.get("/admin/events/pending"),
+  moderateEvent: (eventId: string, action: "approve" | "reject") => apiClient.post("/admin/events/moderate", { eventId, action }),
+  getSettings: (key?: string) => apiClient.get(`/admin/settings${key ? `?key=${key}` : ""}`),
+  updateSettings: (key: string, value: any) => apiClient.post("/admin/settings", { key, value }),
+  getAuditLogs: () => apiClient.get("/admin/audit-logs"),
+  getDepartments: (collegeId?: string) => apiClient.get(`/admin/departments${collegeId ? `?collegeId=${collegeId}` : ""}`),
+  createDepartment: (data: any) => apiClient.post("/admin/departments", data),
+  getClubs: (collegeId?: string) => apiClient.get(`/admin/clubs${collegeId ? `?collegeId=${collegeId}` : ""}`),
+  createClub: (data: any) => apiClient.post("/admin/clubs", data),
+  moderateClub: (clubId: string, action: "approve" | "reject") => apiClient.post("/admin/clubs/moderate", { clubId, action }),
+  getCampusEvents: (collegeId?: string, status?: string) => apiClient.get(`/admin/events${collegeId || status ? `?${collegeId ? `collegeId=${collegeId}&` : ""}${status ? `status=${status}` : ""}` : ""}`),
 };
 
 export const teamService = {
@@ -57,3 +75,23 @@ export const teamService = {
   rejectRequest: (id: string, requesterId: string) => apiClient.post(`/teams/${id}/reject`, { requesterId }),
   transferLead: (id: string, newLeadId: string) => apiClient.post(`/teams/${id}/transfer-lead`, { newLeadId }),
 };
+
+export const systemService = {
+  getSystemPulse: () => apiClient.get("/system-pulse"),
+};
+
+export const recruiterService = {
+  getStats: () => apiClient.get("/recruiters/stats"),
+};
+
+export const facultyService = {
+  getClubs: () => apiClient.get("/faculty/clubs"),
+  postClubEvent: (clubId: string, data: any) => apiClient.post(`/faculty/clubs/${clubId}/events`, data),
+  getClasses: () => apiClient.get("/faculty/classes"),
+  createClass: (data: { name: string; code: string; department?: string }) => apiClient.post("/faculty/classes", data),
+  getClassStudents: (classId: string) => apiClient.get(`/faculty/classes/${classId}/students`),
+  getClassNotes: (classId: string) => apiClient.get(`/faculty/classes/${classId}/notes`),
+  shareNote: (classId: string, data: { title: string; content: string; pdfData?: string; pdfName?: string }) => apiClient.post(`/faculty/classes/${classId}/notes`, data),
+  registerClass: (classId: string, studentUid: string) => apiClient.post(`/faculty/classes/${classId}/register`, { studentUid })
+};
+

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import {
   Search, Building2, MapPin, Briefcase, Users, TrendingUp,
@@ -14,6 +14,7 @@ import { AnimatedCounter } from "@/components/ui/animated-counter";
 import { Avatar } from "@/components/ui/avatar";
 import { RoleGuard } from "@/components/auth/RoleGuard";
 import { Tabs } from "@/components/ui/tabs";
+import { recruiterService } from "@/services";
 
 const opportunities = [
   { id: "1", title: "Software Development Engineer I", company: "GlobalTech Inc.", location: "Bangalore", salary: "12-15 LPA", type: "Full-time", posted: "2d ago", applicants: 42, skills: ["React", "Node.js", "AWS"] },
@@ -38,6 +39,31 @@ const stagger = {
 
 export default function RecruiterPortalPage() {
   const [searchQuery, setSearchQuery] = useState("");
+  const [stats, setStats] = useState({
+    activeStudents: 12480,
+    avgEngagement: 87,
+    nftAchievements: 890,
+    eventsThisMonth: 156
+  });
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const res = await recruiterService.getStats();
+        if (res?.data) {
+          setStats({
+            activeStudents: res.data.activeStudents ?? 12480,
+            avgEngagement: res.data.avgEngagement ?? 87,
+            nftAchievements: res.data.nftAchievements ?? 890,
+            eventsThisMonth: res.data.eventsThisMonth ?? 156
+          });
+        }
+      } catch (err) {
+        console.error("Failed to fetch recruiter stats:", err);
+      }
+    };
+    fetchStats();
+  }, []);
 
   return (
     <RoleGuard allowedRoles={["recruiter", "super_admin", "college_admin", "student"]}>
@@ -57,10 +83,10 @@ export default function RecruiterPortalPage() {
           {/* KPI Cards */}
           <motion.div variants={stagger.item} className="grid gap-4 sm:grid-cols-4">
             {[
-              { label: "Active Students", value: 12480, icon: Users, color: "text-accent" },
-              { label: "Avg Engagement", value: 87, suffix: "%", icon: TrendingUp, color: "text-mint" },
-              { label: "NFT Achievements", value: 890, icon: Award, color: "text-purple" },
-              { label: "Events This Month", value: 156, icon: Star, color: "text-blaze" },
+              { label: "Active Students", value: stats.activeStudents, icon: Users, color: "text-accent" },
+              { label: "Avg Engagement", value: stats.avgEngagement, suffix: "%", icon: TrendingUp, color: "text-mint" },
+              { label: "NFT Achievements", value: stats.nftAchievements, icon: Award, color: "text-purple" },
+              { label: "Events This Month", value: stats.eventsThisMonth, icon: Star, color: "text-blaze" },
             ].map((stat) => (
               <GlassCard key={stat.label} className="text-center">
                 <stat.icon className={`mx-auto h-6 w-6 ${stat.color}`} />
@@ -98,7 +124,7 @@ export default function RecruiterPortalPage() {
                         <GlassCard key={job.id} hover glow="purple">
                           <div className="flex items-start justify-between">
                             <div className="flex-1">
-                              <h3 className="font-heading text-base font-semibold">{job.title}</h3>
+                              <h3 className="font-heading text-base font-semibold text-white">{job.title}</h3>
                               <div className="mt-2 flex flex-wrap gap-2 text-xs text-slate">
                                 <span className="inline-flex items-center gap-1"><Building2 className="h-3 w-3" /> {job.company}</span>
                                 <span className="inline-flex items-center gap-1"><MapPin className="h-3 w-3" /> {job.location}</span>

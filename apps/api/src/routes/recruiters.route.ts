@@ -4,9 +4,17 @@ import { asyncHandler } from "../utils/async-handler";
 import { apiOk } from "../utils/api-response";
 import { emitRealtime } from "../utils/socket";
 import { requireAuth } from "../middleware/auth";
-import { createOpportunity, listOpportunities } from "../services/recruiters.service";
+import { createOpportunity, listOpportunities, getRecruiterStats } from "../services/recruiters.service";
 
 export const recruitersRouter = Router();
+
+recruitersRouter.get(
+  "/recruiters/stats",
+  asyncHandler(async (_request, response) => {
+    const data = await getRecruiterStats();
+    response.json(apiOk(data));
+  })
+);
 
 recruitersRouter.get(
   "/recruiters/opportunities",

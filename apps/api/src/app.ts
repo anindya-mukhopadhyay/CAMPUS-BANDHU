@@ -19,6 +19,7 @@ import { authRouter } from "./routes/auth.route";
 import { chatRouter } from "./routes/chat.route";
 import { adminRouter } from "./routes/admin.route";
 import { teamsRouter } from "./routes/teams.route";
+import { facultyRouter } from "./routes/faculty.route";
 
 export function createApp(): express.Express {
   const app = express();
@@ -65,6 +66,7 @@ export function createApp(): express.Express {
   app.use("/api/v1", recruitersRouter);
   app.use("/api/v1", recommendationsRouter);
   app.use("/api/v1", achievementsRouter);
+  app.use("/api/v1", facultyRouter);
 
   app.use(notFoundHandler);
   app.use(errorHandler);

@@ -9,10 +9,20 @@ import type { CampusPost } from "@/types/domain";
 export function NetworkPanel() {
   const query = useQuery({
     queryKey: ["feed"],
-    queryFn: () => apiRequest<{ data: CampusPost[] }>("/feed")
+    queryFn: () => apiRequest<{
+      data: CampusPost[] | {
+        posts: CampusPost[];
+        total: number;
+        page: number;
+        hasMore: boolean;
+      };
+    }>("/feed")
   });
 
-  const posts = query.data?.data ?? [];
+  const responseData = query.data?.data;
+  const posts: CampusPost[] = Array.isArray(responseData)
+    ? responseData
+    : (responseData && "posts" in responseData ? responseData.posts : []);
 
   return (
     <Card>
