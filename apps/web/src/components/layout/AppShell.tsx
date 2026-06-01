@@ -7,13 +7,12 @@ import { useState, type ReactNode } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Bell, BrainCircuit, Compass, LayoutGrid, Store, UserCircle2, Users,
-  Briefcase, Shield, LogOut, Database, Menu, X, ChevronDown, Zap, HelpCircle, Settings
+  Briefcase, Shield, LogOut, Menu, X, ChevronDown, Zap, HelpCircle, Settings
 } from "lucide-react";
 
 import { cn } from "@/lib/utils/cn";
 import { type Role, ROLE_LABELS, ROLE_COLORS, useAuthStore } from "@/lib/stores/useAuthStore";
 import { logout } from "@/lib/firebase/auth";
-import { adminService } from "@/services";
 import { Avatar } from "@/components/ui/avatar";
 import { NeonBadge } from "@/components/ui/neon-badge";
 import { AnimatedCounter } from "@/components/ui/animated-counter";
@@ -47,30 +46,15 @@ type AppShellProps = {
 export function AppShell({ children }: AppShellProps) {
   const pathname = usePathname();
   const router = useRouter();
-  const { user, profile, role, setRole, isAuthenticated, initializeProfile } = useAuthStore();
+  const { user, profile, role, setRole, isAuthenticated } = useAuthStore();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [roleSwitcherOpen, setRoleSwitcherOpen] = useState(false);
-  const [isSeeding, setIsSeeding] = useState(false);
 
   const filteredNav = navItems.filter((item) => {
     if (!item.allowedRoles) return true;
     if (!role) return false;
     return item.allowedRoles.includes(role);
   });
-
-  const handleSeed = async () => {
-    if (!user) return;
-    setIsSeeding(true);
-    try {
-      await adminService.seed();
-      alert("✅ MongoDB database seeded!");
-      await initializeProfile(user);
-    } catch {
-      alert("❌ Seed failed. Check console.");
-    } finally {
-      setIsSeeding(false);
-    }
-  };
 
   return (
     <div className="mx-auto flex min-h-screen w-full max-w-[1440px] gap-0 lg:gap-6 lg:px-6 lg:py-6">
@@ -213,18 +197,10 @@ export function AppShell({ children }: AppShellProps) {
                 </div>
 
                 {/* Actions */}
-                <div className="flex gap-2">
-                  <button
-                    onClick={handleSeed}
-                    disabled={isSeeding}
-                    className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-accent/10 py-2 text-xs font-medium text-accent transition-colors hover:bg-accent/20 disabled:opacity-50"
-                  >
-                    <Database className="h-3.5 w-3.5" />
-                    {isSeeding ? "..." : "Seed"}
-                  </button>
+                <div className="flex w-full">
                   <button
                     onClick={() => logout()}
-                    className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-white/[0.04] py-2 text-xs font-medium text-slate transition-colors hover:bg-white/[0.08] hover:text-white"
+                    className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-white/[0.04] py-2 text-xs font-medium text-slate transition-colors hover:bg-white/[0.08] hover:text-white"
                   >
                     <LogOut className="h-3.5 w-3.5" />
                     Sign Out
