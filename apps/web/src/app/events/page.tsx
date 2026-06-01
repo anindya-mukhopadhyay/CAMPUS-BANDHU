@@ -122,7 +122,7 @@ export default function EventsPage() {
                     <NeonBadge color="blaze" size="sm" pulse>Featured</NeonBadge>
                     <NeonBadge color="blue" size="sm">{event.category}</NeonBadge>
                   </div>
-                  <h3 className="font-heading text-xl font-bold">{event.title}</h3>
+                  <h3 className="font-heading text-xl font-bold text-white">{event.title}</h3>
                   <p className="mt-2 text-sm text-slate line-clamp-2">{event.description}</p>
                   <div className="mt-3 flex flex-wrap gap-3 text-xs text-slate">
                     <span className="inline-flex items-center gap-1"><Calendar className="h-3.5 w-3.5" /> {event.date}</span>
@@ -171,7 +171,7 @@ export default function EventsPage() {
                     </button>
                   </div>
 
-                  <h3 className="font-heading text-base font-semibold line-clamp-1">{event.title}</h3>
+                  <h3 className="font-heading text-base font-semibold line-clamp-1 text-white">{event.title}</h3>
                   <p className="mt-1 text-xs text-slate line-clamp-2">{event.description}</p>
 
                   <div className="mt-3 flex flex-wrap gap-2 text-[11px] text-slate">
