@@ -181,18 +181,16 @@ body {
   .kicker {
     @apply inline-flex items-center gap-2 rounded-full px-3.5 py-1.5 text-xs font-semibold uppercase tracking-[0.2em];
     background: rgb(var(--color-accent) / 0.1);
-    border: 1px solid rgb(var(--color-accent) / 0.3);
+    border: 1px solid rgb(var(--color-accent) / 0.2);
     color: rgb(var(--color-accent));
   }
 
   /* ─── Grid Background ────────────────────────────────── */
   .grid-background {
     background-image:
-      linear-gradient(rgb(var(--color-border) / 0.06) 1px, transparent 1px),
-      linear-gradient(90deg, rgb(var(--color-border) / 0.06) 1px, transparent 1px);
+      linear-gradient(rgb(var(--color-border) / 0.05) 1px, transparent 1px),
+      linear-gradient(90deg, rgb(var(--color-border) / 0.05) 1px, transparent 1px);
     background-size: 50px 50px;
-    mask-image: radial-gradient(circle at center, black 30%, transparent 75%);
-    -webkit-mask-image: radial-gradient(circle at center, black 30%, transparent 75%);
   }
 
   /* ─── Floating Card Animation ─────────────────────────── */
