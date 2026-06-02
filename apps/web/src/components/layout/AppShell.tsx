@@ -436,7 +436,38 @@ export function AppShell({ children }: AppShellProps) {
                   );
                 })}
               </nav>
-              {!isAuthenticated && (
+              {isAuthenticated ? (
+                <div className="mt-6 rounded-2xl border border-accent/10 bg-accent/[0.03] p-4">
+                  <div className="mb-3 flex items-center gap-3">
+                    <Avatar
+                      src={user?.photoURL}
+                      name={profile?.fullName || "User"}
+                      size="sm"
+                      status="online"
+                    />
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-semibold text-white">{profile?.fullName || "User"}</p>
+                      {role && (
+                        <NeonBadge color={(ROLE_COLORS[role] || "blue") as any} size="sm">
+                          {ROLE_LABELS[role] || "Student"}
+                        </NeonBadge>
+                      )}
+                    </div>
+                  </div>
+                  <button
+                    onClick={async () => {
+                      await logout();
+                      useAuthStore.getState().clearAuth();
+                      setMobileMenuOpen(false);
+                      router.replace("/auth/portal");
+                    }}
+                    className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-white/[0.04] py-2 text-xs font-medium text-slate transition-colors hover:bg-white/[0.08] hover:text-white"
+                  >
+                    <LogOut className="h-3.5 w-3.5" />
+                    Sign Out
+                  </button>
+                </div>
+              ) : (
                 <button
                   onClick={() => { router.push("/auth"); setMobileMenuOpen(false); }}
                   className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-accent to-electric py-2.5 text-sm font-semibold text-white"

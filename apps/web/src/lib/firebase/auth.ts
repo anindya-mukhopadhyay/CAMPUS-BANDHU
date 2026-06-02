@@ -2,6 +2,8 @@ import { GoogleAuthProvider, onAuthStateChanged, signInWithPopup, signOut, creat
 
 import { auth } from "@/lib/firebase/client";
 
+const MOCK_AUTH_STORAGE_KEY = "campus-bandhu:mock-auth";
+
 const provider = new GoogleAuthProvider();
 provider.setCustomParameters({ prompt: "select_account" });
 
@@ -26,6 +28,9 @@ export async function resetPassword(email: string): Promise<void> {
 }
 
 export async function logout(): Promise<void> {
+  if (typeof window !== "undefined") {
+    window.localStorage.removeItem(MOCK_AUTH_STORAGE_KEY);
+  }
   await signOut(auth);
 }
 

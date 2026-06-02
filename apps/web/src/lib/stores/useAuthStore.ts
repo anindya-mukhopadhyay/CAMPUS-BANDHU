@@ -4,6 +4,7 @@ import { type User } from "firebase/auth";
 import { userService } from "@/services";
 
 export type Role = "super_admin" | "college_admin" | "faculty" | "organizer" | "volunteer" | "student" | "recruiter";
+export const MOCK_AUTH_STORAGE_KEY = "campus-bandhu:mock-auth";
 
 export const ROLE_LABELS: Record<Role, string> = {
   super_admin: "Super Admin",
@@ -80,10 +81,12 @@ type AuthState = {
   isAuthenticated: boolean;
   setUser: (user: User | null) => void;
   setProfile: (profile: ProfileData | null) => void;
+  clearAuth: () => void;
   setRole: (role: Role) => Promise<void>;
   initializeProfile: (user: User) => Promise<void>;
   updateProfile: (data: Partial<ProfileData>) => Promise<void>;
   mockLogin: (role: Role, collegeId?: string, collegeName?: string) => void;
+  restoreMockLogin: () => boolean;
 };
 
 export const useAuthStore = create<AuthState>((set, get) => ({
@@ -92,8 +95,25 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   role: null,
   isLoading: true,
   isAuthenticated: false,
-  setUser: (user) => set({ user, isAuthenticated: !!user }),
+  setUser: (user) => {
+    if (user && typeof window !== "undefined") {
+      window.localStorage.removeItem(MOCK_AUTH_STORAGE_KEY);
+    }
+    set({ user, isAuthenticated: !!user });
+  },
   setProfile: (profile) => set({ profile, role: profile?.role || null }),
+  clearAuth: () => {
+    if (typeof window !== "undefined") {
+      window.localStorage.removeItem(MOCK_AUTH_STORAGE_KEY);
+    }
+    set({
+      user: null,
+      profile: null,
+      role: null,
+      isAuthenticated: false,
+      isLoading: false
+    });
+  },
   setRole: async (newRole: Role) => {
     const { user, profile } = get();
     if (!user) return;
@@ -246,12 +266,48 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       };
     }
 
-    set({ 
+    const nextState = {
       user: mockUser, 
       profile: mockProfile, 
       role, 
       isAuthenticated: true, 
       isLoading: false 
-    });
+    };
+
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem(MOCK_AUTH_STORAGE_KEY, JSON.stringify(nextState));
+    }
+
+    set(nextState);
+  },
+  restoreMockLogin: () => {
+    if (typeof window === "undefined") {
+      return false;
+    }
+
+    const rawSession = window.localStorage.getItem(MOCK_AUTH_STORAGE_KEY);
+    if (!rawSession) {
+      return false;
+    }
+
+    try {
+      const session = JSON.parse(rawSession) as Pick<AuthState, "user" | "profile" | "role" | "isAuthenticated">;
+      if (!session.user || !session.profile || !session.role) {
+        window.localStorage.removeItem(MOCK_AUTH_STORAGE_KEY);
+        return false;
+      }
+
+      set({
+        user: session.user,
+        profile: session.profile,
+        role: session.role,
+        isAuthenticated: true,
+        isLoading: false
+      });
+      return true;
+    } catch {
+      window.localStorage.removeItem(MOCK_AUTH_STORAGE_KEY);
+      return false;
+    }
   }
 }));
