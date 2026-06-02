@@ -265,6 +265,8 @@ export default function ProfilePage() {
 
   const [repositories, setRepositories] = useState<any[]>([]);
   const [loadingRepos, setLoadingRepos] = useState(false);
+  const [currentStreak, setCurrentStreak] = useState(0);
+  const [totalCommits, setTotalCommits] = useState(0);
 
   useEffect(() => {
     if (!githubUsername) {
@@ -276,61 +278,92 @@ export default function ProfilePage() {
       setLoadingRepos(true);
       try {
         const res = await fetch(`https://api.github.com/users/${githubUsername}/repos?sort=updated&per_page=10`);
-        if (!res.ok) {
-          throw new Error("Failed to fetch repositories");
+        if (res.ok) {
+          const data = await res.json();
+          if (Array.isArray(data)) {
+            let maxStars = -1;
+            let maxStarsIdx = -1;
+            let maxForks = -1;
+            let maxForksIdx = -1;
+            let newestTime = 0;
+            let newestIdx = -1;
+
+            const processed = data.map((repo: any, idx: number) => {
+              const createdTime = new Date(repo.created_at).getTime();
+              
+              if ((repo.stargazers_count || 0) > maxStars) {
+                maxStars = repo.stargazers_count || 0;
+                maxStarsIdx = idx;
+              }
+              if ((repo.forks_count || 0) > maxForks) {
+                maxForks = repo.forks_count || 0;
+                maxForksIdx = idx;
+              }
+              if (createdTime > newestTime) {
+                newestTime = createdTime;
+                newestIdx = idx;
+              }
+
+              return {
+                name: repo.name,
+                description: repo.description || "No description provided for this repository.",
+                language: repo.language || "TypeScript",
+                forks: repo.forks_count || 0,
+                stars: repo.stargazers_count || 0,
+                tag: "",
+                created_at: repo.created_at,
+                html_url: repo.html_url || `https://github.com/${githubUsername}/${repo.name}`
+              };
+            });
+
+            const maxStarRepo = maxStarsIdx !== -1 && maxStars > 0 ? processed[maxStarsIdx] : null;
+            if (maxStarRepo) {
+              maxStarRepo.tag = "Most Star";
+            }
+            const maxForkRepo = maxForksIdx !== -1 && maxForksIdx !== maxStarsIdx && maxForks > 0 ? processed[maxForksIdx] : null;
+            if (maxForkRepo) {
+              maxForkRepo.tag = "Highest Fork";
+            }
+            const newestRepo = newestIdx !== -1 && newestIdx !== maxStarsIdx && newestIdx !== maxForksIdx ? processed[newestIdx] : null;
+            if (newestRepo) {
+              newestRepo.tag = "New";
+            }
+
+            setRepositories(processed);
+          }
         }
-        const data = await res.json();
-        if (Array.isArray(data)) {
-          let maxStars = -1;
-          let maxStarsIdx = -1;
-          let maxCommits = -1;
-          let maxCommitsIdx = -1;
-          let newestTime = 0;
-          let newestIdx = -1;
 
-          const processed = data.map((repo: any, idx: number) => {
-            const calculatedCommits = (repo.name.charCodeAt(0) * 7 + repo.name.length * 13) % 280 + 15 + (repo.stargazers_count || 0) * 3;
-            const createdTime = new Date(repo.created_at).getTime();
-            
-            if ((repo.stargazers_count || 0) > maxStars) {
-              maxStars = repo.stargazers_count || 0;
-              maxStarsIdx = idx;
+        // Fetch contributions
+        const contribRes = await fetch(`https://github-contributions-api.deno.dev/${githubUsername}.json`);
+        if (contribRes.ok) {
+          const contribData = await contribRes.json();
+          setTotalCommits(contribData.totalContributions || 0);
+
+          let streak = 0;
+          if (contribData.contributions) {
+            const allDays = contribData.contributions.flat().reverse();
+            if (allDays.length > 0) {
+              let startIndex = 0;
+              if (allDays[0].contributionCount === 0) {
+                if (allDays.length > 1 && allDays[1].contributionCount > 0) {
+                  startIndex = 1;
+                } else {
+                  startIndex = -1;
+                }
+              }
+              
+              if (startIndex !== -1) {
+                for (let i = startIndex; i < allDays.length; i++) {
+                  if (allDays[i].contributionCount > 0) {
+                    streak++;
+                  } else {
+                    break;
+                  }
+                }
+              }
             }
-            if (calculatedCommits > maxCommits) {
-              maxCommits = calculatedCommits;
-              maxCommitsIdx = idx;
-            }
-            if (createdTime > newestTime) {
-              newestTime = createdTime;
-              newestIdx = idx;
-            }
-
-            return {
-              name: repo.name,
-              description: repo.description || "No description provided for this repository.",
-              language: repo.language || "TypeScript",
-              commits: calculatedCommits,
-              stars: repo.stargazers_count || 0,
-              tag: "",
-              created_at: repo.created_at,
-              html_url: repo.html_url || `https://github.com/${githubUsername}/${repo.name}`
-            };
-          });
-
-          const maxStarRepo = maxStarsIdx !== -1 && maxStars > 0 ? processed[maxStarsIdx] : null;
-          if (maxStarRepo) {
-            maxStarRepo.tag = "Most Star";
           }
-          const maxCommitRepo = maxCommitsIdx !== -1 && maxCommitsIdx !== maxStarsIdx ? processed[maxCommitsIdx] : null;
-          if (maxCommitRepo) {
-            maxCommitRepo.tag = "Highest Commit";
-          }
-          const newestRepo = newestIdx !== -1 && newestIdx !== maxStarsIdx && newestIdx !== maxCommitsIdx ? processed[newestIdx] : null;
-          if (newestRepo) {
-            newestRepo.tag = "New";
-          }
-
-          setRepositories(processed);
+          setCurrentStreak(streak);
         }
       } catch (err) {
         console.error("Error fetching GitHub repos:", err);
@@ -602,11 +635,11 @@ export default function ProfilePage() {
 
                 <div className="flex gap-4 self-stretch md:self-auto justify-around shrink-0 md:pl-4 md:border-l border-white/[0.06]">
                   <div className="text-center px-4">
-                    <p className="font-heading text-2xl font-bold text-mint">154</p>
+                    <p className="font-heading text-2xl font-bold text-mint">{currentStreak}</p>
                     <p className="text-[10px] text-slate font-medium uppercase tracking-wider font-semibold">Current Streak</p>
                   </div>
                   <div className="text-center px-4">
-                    <p className="font-heading text-2xl font-bold text-accent">342</p>
+                    <p className="font-heading text-2xl font-bold text-accent">{totalCommits}</p>
                     <p className="text-[10px] text-slate font-medium uppercase tracking-wider font-semibold">Total Commits</p>
                   </div>
                 </div>
@@ -640,10 +673,10 @@ export default function ProfilePage() {
                     ))
                   ) : (
                     (repositories.length > 0 ? repositories : [
-                      { name: "campus-bandhu-os", description: "Smart Campus Operating System with AI Matching, real-time sync, and glassmorphic dashboards.", language: "TypeScript", commits: 342, stars: 128, tag: "Highest Commit", html_url: `https://github.com/${githubUsername}/campus-bandhu-os` },
-                      { name: "ai-matching-radar", description: "Skills compatibility matching engine using cosine similarity calculations and fuzzy match logic.", language: "Python", commits: 188, stars: 242, tag: "Most Star", html_url: `https://github.com/${githubUsername}/ai-matching-radar` },
-                      { name: "web3-buildathon-contracts", description: "Smart contracts and decentralized verification logic for NFT credential distribution.", language: "Solidity", commits: 24, stars: 38, tag: "New", html_url: `https://github.com/${githubUsername}/web3-buildathon-contracts` },
-                      { name: "leetcode-stats-api", description: "Serverless endpoints to fetch, compile, and visual solve parameters for competitive coding profiles.", language: "TypeScript", commits: 45, stars: 15, tag: "", html_url: `https://github.com/${githubUsername}/leetcode-stats-api` },
+                      { name: "campus-bandhu-os", description: "Smart Campus Operating System with AI Matching, real-time sync, and glassmorphic dashboards.", language: "TypeScript", forks: 12, stars: 128, tag: "Highest Fork", html_url: `https://github.com/${githubUsername}/campus-bandhu-os` },
+                      { name: "ai-matching-radar", description: "Skills compatibility matching engine using cosine similarity calculations and fuzzy match logic.", language: "Python", forks: 8, stars: 242, tag: "Most Star", html_url: `https://github.com/${githubUsername}/ai-matching-radar` },
+                      { name: "web3-buildathon-contracts", description: "Smart contracts and decentralized verification logic for NFT credential distribution.", language: "Solidity", forks: 4, stars: 38, tag: "New", html_url: `https://github.com/${githubUsername}/web3-buildathon-contracts` },
+                      { name: "leetcode-stats-api", description: "Serverless endpoints to fetch, compile, and visual solve parameters for competitive coding profiles.", language: "TypeScript", forks: 2, stars: 15, tag: "", html_url: `https://github.com/${githubUsername}/leetcode-stats-api` },
                     ]).map((repo) => (
                       <a 
                         key={repo.name} 
@@ -659,7 +692,7 @@ export default function ProfilePage() {
                               <span className={cn(
                                 "text-[8px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wider",
                                 repo.tag === "New" && "bg-electric/10 text-electric border border-electric/20",
-                                repo.tag === "Highest Commit" && "bg-purple/10 text-purple border border-purple/20 shadow-glow-sm animate-pulse",
+                                repo.tag === "Highest Fork" && "bg-purple/10 text-purple border border-purple/20 shadow-glow-sm animate-pulse",
                                 repo.tag === "Most Star" && "bg-mint/10 text-mint border border-mint/20 shadow-glow-sm"
                               )}>
                                 {repo.tag}
@@ -680,7 +713,7 @@ export default function ProfilePage() {
                             )} /> {repo.language}
                           </span>
                           <span className="flex items-center gap-3">
-                            <span>🔥 {repo.commits} commits</span>
+                            <span>🍴 {repo.forks} forks</span>
                             <span>⭐ {repo.stars} stars</span>
                           </span>
                         </div>
