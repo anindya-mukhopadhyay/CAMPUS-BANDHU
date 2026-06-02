@@ -22,7 +22,7 @@ export async function requireAuth(request: Request, response: Response, next: Ne
   }
 
   try {
-    request.user = await firebaseAuth.verifyIdToken(token, true);
+    request.user = await firebaseAuth.verifyIdToken(token);
     console.log("[requireAuth] Firebase token verify success, request.user.uid:", request.user?.uid);
     next();
   } catch (err) {
