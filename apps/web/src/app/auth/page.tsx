@@ -76,7 +76,7 @@ export default function AuthPage() {
         await loginWithEmail(email, password);
       }
       
-      const res = await userService.getMe();
+      const res = await authService.login();
       const profile = res.data;
 
       if (profile.role === "super_admin" || profile.role === "college_admin" || profile.role === "recruiter" || profile.role === "faculty") {
@@ -126,7 +126,7 @@ export default function AuthPage() {
     try {
       await loginWithGoogle();
       
-      const res = await userService.getMe();
+      const res = await authService.login();
       const profile = res.data;
 
       if (profile.role === "super_admin" || profile.role === "college_admin" || profile.role === "recruiter" || profile.role === "faculty") {

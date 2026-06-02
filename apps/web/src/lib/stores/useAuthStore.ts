@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import { type User } from "firebase/auth";
 
-import { userService } from "@/services";
+import { userService, authService } from "@/services";
 
 export type Role = "super_admin" | "college_admin" | "faculty" | "organizer" | "volunteer" | "student" | "recruiter";
 export const ROLE_LABELS: Record<Role, string> = {
@@ -140,8 +140,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   initializeProfile: async (user: User) => {
     set({ isLoading: true });
     try {
-      // Fetch profile from our Backend API (which auto-creates if new)
-      const response = await userService.getMe();
+      // Fetch profile via login endpoint to ensure Google users are restored
+      const response = await authService.login();
       set({ profile: response.data, role: response.data.role, isLoading: false });
     } catch (error: any) {
       console.error("Critical: API profile initialization failed:", error);
