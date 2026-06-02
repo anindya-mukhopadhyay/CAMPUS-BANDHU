@@ -1,5 +1,8 @@
 import { z } from "zod";
 import UserModel from "../models/user.model";
+import EventModel from "../models/event.model";
+import AchievementModel from "../models/achievement.model";
+import ChatModel from "../models/chat.model";
 
 const profileSchema = z.object({
   fullName: z.string().min(3),
@@ -67,6 +70,17 @@ export async function generateUniqueUserId(base: string): Promise<string> {
 
 export async function getProfileById(userId: string): Promise<Record<string, unknown>> {
   const user = await UserModel.findOne({ uid: userId });
+
+  // Calculate real stats
+  const [eventsJoined, achievements, connections] = await Promise.all([
+    EventModel.countDocuments({ registeredStudentIds: userId }),
+    AchievementModel.countDocuments({ studentId: userId }),
+    ChatModel.countDocuments({ participants: userId })
+  ]);
+  const xpPoints = (eventsJoined * 50) + (achievements * 200) + (connections * 10);
+  
+  const stats = { eventsJoined, achievements, connections, xpPoints };
+
   if (!user) {
     const email = `${userId.substring(0, 8)}@campus.edu`;
     const defaultHandle = await generateUniqueUserId(userId.substring(0, 8));
@@ -85,10 +99,10 @@ export async function getProfileById(userId: string): Promise<Record<string, unk
     };
 
     const created = await UserModel.create(defaults);
-    return created.toJSON() as any;
+    return { ...created.toJSON(), stats } as any;
   }
 
-  return user.toJSON() as any;
+  return { ...user.toJSON(), stats } as any;
 }
 
 export async function updateProfile(userId: string, payload: unknown): Promise<Record<string, unknown>> {

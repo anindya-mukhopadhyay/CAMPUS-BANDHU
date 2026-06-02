@@ -69,6 +69,12 @@ export type ProfileData = {
     issueDate?: string;
     credentialUrl?: string;
   }>;
+  stats?: {
+    eventsJoined: number;
+    achievements: number;
+    connections: number;
+    xpPoints: number;
+  };
 };
 
 type AuthState = {

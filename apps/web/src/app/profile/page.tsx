@@ -598,10 +598,10 @@ export default function ProfilePage() {
               {/* Stats */}
               <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
                 {[
-                  { label: "Events Joined", value: profile?.role === "organizer" ? 8 : 4, color: "text-accent" },
-                  { label: "Connections", value: 124, color: "text-mint" },
-                  { label: "Achievements", value: 6, color: "text-purple" },
-                  { label: "XP Points", value: 850, color: "text-blaze" },
+                  { label: "Events Joined", value: profile?.stats?.eventsJoined || 0, color: "text-accent" },
+                  { label: "Connections", value: profile?.stats?.connections || 0, color: "text-mint" },
+                  { label: "Achievements", value: profile?.stats?.achievements || 0, color: "text-purple" },
+                  { label: "XP Points", value: profile?.stats?.xpPoints || 0, color: "text-blaze" },
                 ].map((stat) => (
                   <div key={stat.label} className="rounded-xl bg-white/[0.03] p-3 text-center border border-white/[0.04]">
                     <p className={`font-heading text-xl font-bold ${stat.color}`}>
