@@ -28,7 +28,7 @@ export async function getPersonalizedRecommendations(input: PersonalizationInput
     });
 
     return response.data.data as Record<string, unknown>[];
-  } catch (error) {
+  } catch {
     // If AI service is down/not configured, return a basic intersection or top items as fallback
     const matched = corpus.filter(item => {
       const tags = (item as any).tags || (item as any).skills || [];

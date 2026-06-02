@@ -50,14 +50,6 @@ export default function AuthPage() {
 
     try {
       if (mode === "login") {
-        const superAdminEmail = process.env.NEXT_PUBLIC_SUPER_ADMIN_EMAIL || "superadmin@gmail.com";
-        const superAdminPassword = process.env.NEXT_PUBLIC_SUPER_ADMIN_PASSWORD || "1234567890";
-
-        if (email === superAdminEmail && password === superAdminPassword) {
-          setError("Please use the Admin, Recruiter & Faculty Portal to sign in.");
-          setLoading(false);
-          return;
-        }
         await loginWithEmail(email, password);
       } else {
         if (!name.trim()) {

@@ -25,8 +25,6 @@ export async function apiRequest<TData>(
 
   if (token) {
     headers.Authorization = `Bearer ${token}`;
-  } else if (process.env.NODE_ENV === "development") {
-    headers.Authorization = `Bearer mock-token`;
   }
 
   const response = await fetch(`${API_BASE_URL}${endpoint}`, {

@@ -21,42 +21,11 @@ export async function requireAuth(request: Request, response: Response, next: Ne
     return;
   }
 
-  // Development-only: Allow mock token for easier testing
-  if (process.env.NODE_ENV === "development" && token.startsWith("mock-token")) {
-    const parts = token.split("-");
-    const role = parts[2] || "student";
-    const uid = parts[3] || "mock-uid";
-    request.user = {
-      uid,
-      email: `${role}@example.com`,
-      role,
-    } as any;
-    console.log("[requireAuth] Mock token match, request.user set:", request.user);
-    return next();
-  }
-
   try {
     request.user = await firebaseAuth.verifyIdToken(token, true);
     console.log("[requireAuth] Firebase token verify success, request.user.uid:", request.user?.uid);
     next();
   } catch (err) {
-    if (process.env.NODE_ENV === "development") {
-      try {
-        const payloadPart = token.split(".")[1];
-        if (payloadPart) {
-          const decoded = JSON.parse(Buffer.from(payloadPart, "base64").toString("utf-8"));
-          request.user = {
-            uid: decoded.uid || decoded.sub || "mock-uid",
-            email: decoded.email || "mock@example.com",
-            role: decoded.role || "student"
-          } as any;
-          console.log("[requireAuth] Dev catch block fallback, request.user set:", request.user);
-          return next();
-        }
-      } catch (decodeErr) {
-        // Fall through to normal error
-      }
-    }
     console.log("[requireAuth] Firebase verify failed, error:", err);
     response.status(StatusCodes.UNAUTHORIZED).json({ message: "Invalid or expired token" });
   }
@@ -78,15 +47,8 @@ export function requireRole(...allowedRoles: string[]) {
     }
 
     try {
-      const isMock = process.env.NODE_ENV === "development" && request.headers.authorization?.includes("mock-token");
-      let role = "student";
-      
-      if (isMock) {
-        role = (request.user as any)?.role || "student";
-      } else {
-        const userDoc = await UserModel.findOne({ uid: userId });
-        role = userDoc ? userDoc.role : "student";
-      }
+      const userDoc = await UserModel.findOne({ uid: userId });
+      const role = userDoc ? userDoc.role : "student";
 
       if (!allowedRoles.includes(role)) {
         response.status(StatusCodes.FORBIDDEN).json({

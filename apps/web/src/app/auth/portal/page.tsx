@@ -61,40 +61,6 @@ export default function OthersPortalPage() {
 
     try {
       if (mode === "login") {
-        const superAdminEmail = process.env.NEXT_PUBLIC_SUPER_ADMIN_EMAIL || "superadmin@gmail.com";
-        const superAdminPassword = process.env.NEXT_PUBLIC_SUPER_ADMIN_PASSWORD || "1234567890";
-
-        if (email === superAdminEmail && password === superAdminPassword) {
-          useAuthStore.getState().mockLogin("super_admin");
-          router.replace("/admin");
-          setLoading(false);
-          return;
-        }
-
-        // Mock Login for College Admin
-        if (email === "admin@gmail.com" && password === "1234567890") {
-          useAuthStore.getState().mockLogin("college_admin");
-          router.replace("/admin");
-          setLoading(false);
-          return;
-        }
-
-        // Mock Login for Faculty
-        if (email === "faculty@gmail.com" && password === "1234567890") {
-          useAuthStore.getState().mockLogin("faculty");
-          router.replace("/faculty");
-          setLoading(false);
-          return;
-        }
-
-        // Mock Login for Recruiter
-        if (email === "recruiter@gmail.com" && password === "1234567890") {
-          useAuthStore.getState().mockLogin("recruiter");
-          router.replace("/recruiters");
-          setLoading(false);
-          return;
-        }
-
         await loginWithEmail(email, password);
       } else {
         // Sign Up Validation

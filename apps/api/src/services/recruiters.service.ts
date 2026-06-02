@@ -1,7 +1,9 @@
 import { z } from "zod";
 import mongoose from "mongoose";
 import OpportunityModel from "../models/opportunity.model";
-
+import { UserModel } from "../models/user.model";
+import { EventModel } from "../models/event.model";
+import { AchievementModel } from "../models/achievement.model";
 const opportunitySchema = z.object({
   company: z.string().min(2),
   role: z.string().min(2),
@@ -38,10 +40,6 @@ export async function createOpportunity(payload: unknown, recruiterId: string): 
 export async function getRecruiterStats() {
   const now = new Date();
   const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-
-  const UserModel = mongoose.models.User || require("../models/user.model").UserModel;
-  const EventModel = mongoose.models.Event || require("../models/event.model").EventModel;
-  const AchievementModel = mongoose.models.Achievement || require("../models/achievement.model").AchievementModel;
 
   const [activeStudents, totalStudents, studentWithRegs, nftAchievementsCount, eventsCount] = await Promise.all([
     UserModel.countDocuments({ role: "student", status: "active" }),

@@ -26,7 +26,6 @@ export function Providers({ children }: ProvidersProps) {
   );
 
   useEffect(() => {
-    useAuthStore.getState().restoreMockLogin();
     void initAnalytics();
 
     // Fallback: Ensure loading state is cleared if Firebase hangs
@@ -51,9 +50,7 @@ export function Providers({ children }: ProvidersProps) {
           useAuthStore.setState({ isLoading: false });
         }
       } else {
-        if (!useAuthStore.getState().restoreMockLogin()) {
-          useAuthStore.getState().clearAuth();
-        }
+        useAuthStore.getState().clearAuth();
       }
     });
 
