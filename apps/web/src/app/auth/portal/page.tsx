@@ -70,6 +70,31 @@ export default function OthersPortalPage() {
           setLoading(false);
           return;
         }
+
+        // Mock Login for College Admin
+        if (email === "admin@gmail.com" && password === "1234567890") {
+          useAuthStore.getState().mockLogin("college_admin");
+          router.replace("/admin");
+          setLoading(false);
+          return;
+        }
+
+        // Mock Login for Faculty
+        if (email === "faculty@gmail.com" && password === "1234567890") {
+          useAuthStore.getState().mockLogin("faculty");
+          router.replace("/faculty");
+          setLoading(false);
+          return;
+        }
+
+        // Mock Login for Recruiter
+        if (email === "recruiter@gmail.com" && password === "1234567890") {
+          useAuthStore.getState().mockLogin("recruiter");
+          router.replace("/recruiters");
+          setLoading(false);
+          return;
+        }
+
         await loginWithEmail(email, password);
       } else {
         // Sign Up Validation
@@ -162,6 +187,8 @@ export default function OthersPortalPage() {
           router.replace("/recruiters");
         } else if (currentRole === "college_admin" || currentRole === "super_admin") {
           router.replace("/admin");
+        } else if (currentRole === "faculty") {
+          router.replace("/faculty");
         } else {
           router.replace("/");
         }
@@ -222,6 +249,8 @@ export default function OthersPortalPage() {
           router.replace("/recruiters");
         } else if (currentRole === "college_admin" || currentRole === "super_admin") {
           router.replace("/admin");
+        } else if (currentRole === "faculty") {
+          router.replace("/faculty");
         } else {
           router.replace("/");
         }

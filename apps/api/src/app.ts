@@ -40,7 +40,7 @@ export function createApp(): express.Express {
   app.use(
     rateLimit({
       windowMs: 15 * 60 * 1000,
-      limit: 200,
+      limit: env.NODE_ENV === "development" ? 10000 : 200,
       standardHeaders: "draft-8",
       legacyHeaders: false,
       message: { success: false, message: "Rate limit exceeded" }

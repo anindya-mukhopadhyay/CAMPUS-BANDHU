@@ -149,26 +149,102 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
   },
   mockLogin: (role, collegeId, collegeName) => {
-    const mockUser = {
-      uid: "mock-uid",
-      email: "admin@campus.edu",
-      displayName: "Mock Admin",
-      photoURL: "https://api.dicebear.com/7.x/avataaars/svg?seed=mock",
-    } as any;
+    let mockUser: any;
+    let mockProfile: ProfileData;
 
-    const mockProfile: ProfileData = {
-      fullName: "Mock Admin",
-      userId: role === "student" ? "mock_student" : role === "super_admin" ? "mock_super_admin" : "mock_college_admin",
-      department: "Administration",
-      graduationYear: 2024,
-      bio: "Demo administration account.",
-      interests: ["governance", "efficiency"],
-      skills: ["management"],
-      role,
-      collegeId,
-      collegeName,
-      email: "admin@campus.edu"
-    };
+    if (role === "super_admin") {
+      mockUser = {
+        uid: "mock-super-admin-uid",
+        email: "superadmin@gmail.com",
+        displayName: "Super Admin",
+        photoURL: "https://api.dicebear.com/7.x/avataaars/svg?seed=superadmin",
+      };
+      mockProfile = {
+        fullName: "System Administrator",
+        userId: "system_admin",
+        department: "IT Services",
+        graduationYear: 2020,
+        bio: "Global platform overseer and administrator.",
+        interests: ["infrastructure", "security"],
+        skills: ["Kubernetes", "MongoDB", "SysAdmin"],
+        role: "super_admin",
+        email: "superadmin@gmail.com"
+      };
+    } else if (role === "college_admin") {
+      mockUser = {
+        uid: "mock-college-admin-uid",
+        email: "admin@gmail.com",
+        displayName: "College Admin",
+        photoURL: "https://api.dicebear.com/7.x/avataaars/svg?seed=collegeadmin",
+      };
+      mockProfile = {
+        fullName: "Dean of Academic Affairs",
+        userId: "college_admin",
+        department: "Administration",
+        graduationYear: 2005,
+        bio: "Campus administration director.",
+        interests: ["academics", "governance"],
+        skills: ["Leadership", "Management"],
+        role: "college_admin",
+        collegeId: collegeId || "col-123",
+        collegeName: collegeName || "Netaji Subhas University",
+        email: "admin@gmail.com"
+      };
+    } else if (role === "faculty") {
+      mockUser = {
+        uid: "mock-faculty-uid",
+        email: "faculty@gmail.com",
+        displayName: "Faculty Member",
+        photoURL: "https://api.dicebear.com/7.x/avataaars/svg?seed=faculty",
+      };
+      mockProfile = {
+        fullName: "Dr. Vikram Singh",
+        userId: "vikram_singh",
+        department: "Computer Science",
+        graduationYear: 1998,
+        bio: "Professor researching Distributed Systems, IoT, and AI.",
+        interests: ["research", "iot", "distributed systems"],
+        skills: ["MATLAB", "Embedded Systems", "Python"],
+        role: "faculty",
+        email: "faculty@gmail.com"
+      };
+    } else if (role === "recruiter") {
+      mockUser = {
+        uid: "mock-recruiter-uid",
+        email: "recruiter@gmail.com",
+        displayName: "Sarah Jenkins",
+        photoURL: "https://api.dicebear.com/7.x/avataaars/svg?seed=recruiter",
+      };
+      mockProfile = {
+        fullName: "Sarah Jenkins",
+        userId: "sarah_recruiter",
+        department: "Talent Acquisition",
+        graduationYear: 2015,
+        bio: "University recruiter at GlobalTech Inc.",
+        interests: ["hiring", "networking"],
+        skills: ["Recruitment", "Interviewing"],
+        role: "recruiter",
+        email: "recruiter@gmail.com"
+      };
+    } else {
+      mockUser = {
+        uid: "mock-student-uid",
+        email: "student@gmail.com",
+        displayName: "Alice Sharma",
+        photoURL: "https://api.dicebear.com/7.x/avataaars/svg?seed=student",
+      };
+      mockProfile = {
+        fullName: "Alice Sharma",
+        userId: "alice_sharma",
+        department: "Computer Science",
+        graduationYear: 2025,
+        bio: "Passionate student builder exploring modern tech.",
+        interests: ["ai", "web3", "hackathons"],
+        skills: ["React", "Node.js", "Python"],
+        role: "student",
+        email: "student@gmail.com"
+      };
+    }
 
     set({ 
       user: mockUser, 
