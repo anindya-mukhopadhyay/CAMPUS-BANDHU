@@ -1324,45 +1324,7 @@ export default function ProfilePage() {
             </div>
           </div>
 
-          {/* Image Adjustments */}
-          <div className="border-t border-white/[0.06] pt-3">
-            <h4 className="text-xs font-semibold text-accent uppercase tracking-wider mb-3">Image Alignment & Adjustments</h4>
-            <div className="max-w-md">
-              <div className="rounded-xl bg-white/[0.02] border border-white/[0.04] p-3 space-y-3">
-                <p className="text-xs font-semibold text-white">Cover Photo Controls</p>
-                <div>
-                  <div className="flex justify-between text-[10px] text-slate mb-1">
-                    <span>Zoom Scale</span>
-                    <span>{Math.round(editData.coverZoom * 100)}%</span>
-                  </div>
-                  <input
-                    type="range"
-                    min="1"
-                    max="3"
-                    step="0.05"
-                    value={editData.coverZoom}
-                    onChange={(e) => setEditData({ ...editData, coverZoom: Number(e.target.value) })}
-                    className="w-full accent-mint cursor-pointer"
-                  />
-                </div>
-                <div>
-                  <div className="flex justify-between text-[10px] text-slate mb-1">
-                    <span>Vertical Position (Y Offset)</span>
-                    <span>{editData.coverY}%</span>
-                  </div>
-                  <input
-                    type="range"
-                    min="0"
-                    max="100"
-                    step="1"
-                    value={editData.coverY}
-                    onChange={(e) => setEditData({ ...editData, coverY: Number(e.target.value) })}
-                    className="w-full accent-mint cursor-pointer"
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
+
 
           <div>
             <label className="text-xs text-slate mb-1 block">Bio / Summary</label>
