@@ -19,6 +19,7 @@ const profileSchema = z.object({
   avatarX: z.number().optional(),
   avatarY: z.number().optional(),
   coverZoom: z.number().optional(),
+  coverX: z.number().optional(),
   coverY: z.number().optional(),
   githubUrl: z.string().optional().or(z.literal("")),
   linkedinUrl: z.string().optional().or(z.literal("")),

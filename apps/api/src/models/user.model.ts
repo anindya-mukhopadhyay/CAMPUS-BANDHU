@@ -19,6 +19,7 @@ export interface IUser {
   avatarX?: number;
   avatarY?: number;
   coverZoom?: number;
+  coverX?: number;
   coverY?: number;
   githubUrl?: string;
   linkedinUrl?: string;
@@ -71,6 +72,7 @@ const userSchema = new Schema<IUser>(
     avatarX: { type: Number, default: 0 },
     avatarY: { type: Number, default: 0 },
     coverZoom: { type: Number, default: 1 },
+    coverX: { type: Number, default: 0 },
     coverY: { type: Number, default: 50 },
     githubUrl: { type: String },
     linkedinUrl: { type: String },

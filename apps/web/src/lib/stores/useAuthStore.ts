@@ -40,6 +40,7 @@ export type ProfileData = {
   avatarX?: number;
   avatarY?: number;
   coverZoom?: number;
+  coverX?: number;
   coverY?: number;
   email?: string;
   githubUrl?: string;

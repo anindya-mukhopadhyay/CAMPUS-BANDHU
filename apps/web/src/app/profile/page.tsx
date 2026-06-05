@@ -53,9 +53,14 @@ export default function ProfilePage() {
 
   // Repositioning banner cover photo
   const [isRepositioningCover, setIsRepositioningCover] = useState(false);
-  const [coverDragY, setCoverDragY] = useState(50);
+  const [coverDragX, setCoverDragX] = useState(0);
+  const [coverDragY, setCoverDragY] = useState(0);
+  const [coverDragZoom, setCoverDragZoom] = useState(1);
   const [isDraggingCover, setIsDraggingCover] = useState(false);
+  const [dragStartX, setDragStartX] = useState(0);
   const [dragStartY, setDragStartY] = useState(0);
+  const [touchStartDist, setTouchStartDist] = useState<number | null>(null);
+  const [touchStartZoom, setTouchStartZoom] = useState(1);
 
   // Projects Modal
   const [isAddProjectOpen, setIsAddProjectOpen] = useState(false);
@@ -87,26 +92,41 @@ export default function ProfilePage() {
 
   // Sync repositioning
   useEffect(() => {
+    if (profile?.coverX !== undefined) setCoverDragX(profile.coverX);
     if (profile?.coverY !== undefined) {
       setCoverDragY(profile.coverY);
+    } else {
+      setCoverDragY(0);
     }
-  }, [profile?.coverY]);
+    if (profile?.coverZoom !== undefined) setCoverDragZoom(profile.coverZoom);
+  }, [profile?.coverX, profile?.coverY, profile?.coverZoom]);
 
   const handleCoverMouseDown = (e: React.MouseEvent) => {
     if (!isRepositioningCover) return;
     setIsDraggingCover(true);
+    setDragStartX(e.clientX);
     setDragStartY(e.clientY);
     e.preventDefault();
   };
 
   const handleCoverMouseMove = (e: React.MouseEvent) => {
     if (!isDraggingCover || !isRepositioningCover) return;
+    const deltaX = e.clientX - dragStartX;
     const deltaY = e.clientY - dragStartY;
-    const sensitivity = 0.4;
-    setCoverDragY((prev) => {
-      const nextY = prev - deltaY * sensitivity;
-      return Math.max(0, Math.min(100, nextY));
-    });
+
+    if (e.shiftKey) {
+      // Zoom logic on Laptop: Shift + drag mouse up/down
+      const zoomSensitivity = 0.005;
+      setCoverDragZoom((prev) => {
+        const nextZoom = prev - deltaY * zoomSensitivity;
+        return Math.max(1, Math.min(4, nextZoom));
+      });
+    } else {
+      // Direct drag repositioning: left/right, up/down
+      setCoverDragX((prev) => prev + deltaX);
+      setCoverDragY((prev) => prev + deltaY);
+    }
+    setDragStartX(e.clientX);
     setDragStartY(e.clientY);
   };
 
@@ -116,22 +136,51 @@ export default function ProfilePage() {
 
   const handleCoverTouchStart = (e: React.TouchEvent) => {
     if (!isRepositioningCover) return;
-    if (e.touches && e.touches[0]) {
+    if (e.touches && e.touches.length === 1 && e.touches[0]) {
       setIsDraggingCover(true);
+      setDragStartX(e.touches[0].clientX);
       setDragStartY(e.touches[0].clientY);
+      setTouchStartDist(null);
+    } else if (e.touches && e.touches.length === 2 && e.touches[0] && e.touches[1]) {
+      setIsDraggingCover(false);
+      const dist = Math.hypot(
+        e.touches[0].clientX - e.touches[1].clientX,
+        e.touches[0].clientY - e.touches[1].clientY
+      );
+      setTouchStartDist(dist);
+      setTouchStartZoom(coverDragZoom);
     }
   };
 
   const handleCoverTouchMove = (e: React.TouchEvent) => {
-    if (!isDraggingCover || !isRepositioningCover) return;
-    if (e.touches && e.touches[0]) {
+    if (!isRepositioningCover) return;
+    if (e.touches && e.touches.length === 1 && isDraggingCover && e.touches[0]) {
+      const deltaX = e.touches[0].clientX - dragStartX;
       const deltaY = e.touches[0].clientY - dragStartY;
-      const sensitivity = 0.4;
-      setCoverDragY((prev) => {
-        const nextY = prev - deltaY * sensitivity;
-        return Math.max(0, Math.min(100, nextY));
-      });
+      setCoverDragX((prev) => prev + deltaX);
+      setCoverDragY((prev) => prev + deltaY);
+      setDragStartX(e.touches[0].clientX);
       setDragStartY(e.touches[0].clientY);
+    } else if (e.touches && e.touches.length === 2 && touchStartDist !== null && e.touches[0] && e.touches[1]) {
+      const dist = Math.hypot(
+        e.touches[0].clientX - e.touches[1].clientX,
+        e.touches[0].clientY - e.touches[1].clientY
+      );
+      const scale = dist / touchStartDist;
+      const nextZoom = touchStartZoom * scale;
+      setCoverDragZoom(Math.max(1, Math.min(4, nextZoom)));
+    }
+  };
+
+  const handleCoverWheel = (e: React.WheelEvent) => {
+    if (!isRepositioningCover) return;
+    if (e.shiftKey) {
+      e.preventDefault();
+      const zoomSensitivity = 0.001;
+      setCoverDragZoom((prev) => {
+        const nextZoom = prev - e.deltaY * zoomSensitivity;
+        return Math.max(1, Math.min(4, nextZoom));
+      });
     }
   };
 
@@ -155,7 +204,8 @@ export default function ProfilePage() {
     avatarX: 0,
     avatarY: 0,
     coverZoom: 1,
-    coverY: 50,
+    coverX: 0,
+    coverY: 0,
     gender: "Undeclared"
   });
 
@@ -187,6 +237,7 @@ export default function ProfilePage() {
       avatarX: editData.avatarX,
       avatarY: editData.avatarY,
       coverZoom: editData.coverZoom,
+      coverX: editData.coverX,
       coverY: editData.coverY,
       gender: editData.gender,
       skills: editData.skills,
@@ -384,13 +435,14 @@ export default function ProfilePage() {
             {/* Banner */}
             <div 
               className={`absolute inset-x-0 top-0 h-28 w-full overflow-hidden group/cover ${
-                isRepositioningCover ? "cursor-ns-resize touch-none select-none z-10" : "cursor-pointer"
+                isRepositioningCover ? "cursor-move touch-none select-none z-10" : "cursor-pointer"
               }`}
               onClick={() => { if (!isRepositioningCover) setCoverMenuOpen(true); }}
               onMouseDown={handleCoverMouseDown}
               onMouseMove={handleCoverMouseMove}
               onMouseUp={handleCoverMouseUp}
               onMouseLeave={handleCoverMouseUp}
+              onWheel={handleCoverWheel}
               onTouchStart={handleCoverTouchStart}
               onTouchMove={handleCoverTouchMove}
               onTouchEnd={handleCoverMouseUp}
@@ -399,12 +451,13 @@ export default function ProfilePage() {
                 <img
                   src={profile.coverPhotoUrl}
                   alt="Cover Banner"
-                  className={`h-full w-full object-cover opacity-80 pointer-events-none select-none ${
+                  className={`h-full w-full object-cover opacity-80 pointer-events-none select-none origin-center ${
                     isRepositioningCover ? "" : "transition-all duration-500 group-hover/cover:scale-105"
                   }`}
                   style={{
-                    transform: `scale(${profile?.coverZoom || 1})`,
-                    objectPosition: `center ${isRepositioningCover ? coverDragY : (profile?.coverY !== undefined ? profile.coverY : 50)}%`
+                    transform: isRepositioningCover
+                      ? `translate(${coverDragX}px, ${coverDragY}px) scale(${coverDragZoom})`
+                      : `translate(${profile?.coverX || 0}px, ${profile?.coverZoom !== undefined ? (profile?.coverY || 0) : 0}px) scale(${profile?.coverZoom || 1})`
                   }}
                 />
               ) : (
@@ -413,20 +466,18 @@ export default function ProfilePage() {
 
               {isRepositioningCover && (
                 <div className="absolute inset-0 bg-black/35 flex flex-col justify-between p-2 select-none pointer-events-none z-20">
-                  <div className="mx-auto rounded-lg bg-black/60 px-3 py-1 text-[10px] font-semibold text-white backdrop-blur-md flex items-center gap-1.5 shadow-lg border border-white/10">
+                  <div className="mx-auto rounded-lg bg-black/75 px-3 py-1 text-[10px] font-semibold text-white backdrop-blur-md flex items-center gap-1.5 shadow-lg border border-white/10">
                     <span className="w-2 h-2 rounded-full bg-mint animate-ping" />
-                    Drag photo up or down to adjust view
+                    Drag image to reposition • Shift+Drag/Scroll (PC) or Pinch (Mobile) to Zoom
                   </div>
                   <div className="flex justify-end gap-2 pointer-events-auto">
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
                         setIsRepositioningCover(false);
-                        if (profile?.coverY !== undefined) {
-                          setCoverDragY(profile.coverY);
-                        } else {
-                          setCoverDragY(50);
-                        }
+                        setCoverDragX(profile?.coverX || 0);
+                        setCoverDragY(profile?.coverZoom !== undefined ? (profile?.coverY || 0) : 0);
+                        setCoverDragZoom(profile?.coverZoom || 1);
                       }}
                       className="rounded-lg bg-white/10 hover:bg-white/20 px-2.5 py-1 text-[10px] font-bold text-white transition-colors cursor-pointer border border-white/10 shadow-md"
                     >
@@ -436,7 +487,11 @@ export default function ProfilePage() {
                       onClick={async (e) => {
                         e.stopPropagation();
                         setIsRepositioningCover(false);
-                        await updateProfile({ coverY: coverDragY });
+                        await updateProfile({ 
+                          coverX: coverDragX,
+                          coverY: coverDragY,
+                          coverZoom: coverDragZoom
+                        });
                       }}
                       className="rounded-lg bg-mint px-2.5 py-1 text-[10px] font-bold text-base transition-colors cursor-pointer shadow-md hover:brightness-110"
                     >
@@ -571,7 +626,8 @@ export default function ProfilePage() {
                         avatarX: profile?.avatarX || 0,
                         avatarY: profile?.avatarY || 0,
                         coverZoom: profile?.coverZoom || 1,
-                        coverY: profile?.coverY || 50,
+                        coverX: profile?.coverX || 0,
+                        coverY: profile?.coverZoom !== undefined ? (profile?.coverY || 0) : 0,
                         gender: profile?.gender || "Undeclared"
                       });
                       setIsEditing(true);
