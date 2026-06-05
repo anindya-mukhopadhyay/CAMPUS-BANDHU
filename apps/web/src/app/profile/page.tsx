@@ -1,16 +1,14 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import {
-  MapPin, Mail, Calendar, BookOpen, Award, Users, Zap, Briefcase, Trophy, Cpu,
-  Edit3, Github, Linkedin, ExternalLink, Camera, Upload, X, Plus, Trash2, Code2, Sparkles, Folder
+  MapPin, Mail, Calendar, BookOpen, Award, Briefcase, Trophy, Cpu,
+  Edit3, Github, Linkedin, ExternalLink, Camera, Upload, X, Plus, Trash2, Code2, Folder, Sparkles
 } from "lucide-react";
 
 import { AppShell } from "@/components/layout/AppShell";
-import { GlassCard } from "@/components/ui/glass-card";
 import { NeonBadge } from "@/components/ui/neon-badge";
-import { AnimatedCounter } from "@/components/ui/animated-counter";
 import { Avatar } from "@/components/ui/avatar";
 import { Modal } from "@/components/ui/modal";
 import { Input } from "@/components/ui/input";
@@ -44,12 +42,42 @@ const stagger = {
   item: { initial: { opacity: 0, y: 12 }, animate: { opacity: 1, y: 0 } }
 };
 
+// Reusable macOS Terminal Console Wrapper
+const ConsoleWindow = ({ title, children, className }: { title: string, children: React.ReactNode, className?: string }) => {
+  return (
+    <div className={cn("rounded-3xl border border-white/[0.08] bg-[#070b15]/75 backdrop-blur-md shadow-2xl overflow-hidden text-left flex flex-col transition-all duration-300 hover:border-accent/40 hover:shadow-[0_0_30px_rgba(0,212,255,0.08)]", className)}>
+      {/* Console Title Header */}
+      <div className="flex items-center justify-between px-5 py-3.5 bg-white/[0.02] border-b border-white/[0.06] select-none shrink-0">
+        <div className="flex gap-1.5">
+          <span className="w-2.5 h-2.5 rounded-full bg-rose border border-rose/30 shadow-inner" />
+          <span className="w-2.5 h-2.5 rounded-full bg-blaze border border-blaze/30 shadow-inner" />
+          <span className="w-2.5 h-2.5 rounded-full bg-mint border border-mint/30 shadow-inner" />
+        </div>
+        <span className="text-[9px] font-mono font-extrabold text-slate/40 uppercase tracking-[0.2em]">{title}</span>
+        <div className="w-9 h-1 bg-transparent" />
+      </div>
+      <div className="p-5 flex-1 flex flex-col justify-between">
+        {children}
+      </div>
+    </div>
+  );
+};
+
 export default function ProfilePage() {
   const { profile, role, user, updateProfile } = useAuthStore();
   const [isEditing, setIsEditing] = useState(false);
   const [avatarMenuOpen, setAvatarMenuOpen] = useState(false);
   const [coverMenuOpen, setCoverMenuOpen] = useState(false);
   const [lightboxImage, setLightboxImage] = useState<{ src: string; title: string } | null>(null);
+
+  // Terminal Console State
+  const [terminalInput, setTerminalInput] = useState("");
+  const [terminalHistory, setTerminalHistory] = useState<string[]>([
+    "CAMPUS-BANDHU profile shell console [v2.0].",
+    "Type 'help' to see list of available command commands or run macros below.",
+    ""
+  ]);
+  const terminalEndRef = useRef<HTMLDivElement>(null);
 
   // Repositioning banner cover photo
   const [isRepositioningCover, setIsRepositioningCover] = useState(false);
@@ -449,20 +477,103 @@ export default function ProfilePage() {
     groupedSkills[category].push(skill);
   });
 
+  // Terminal Execution Engine
+  const executeCommand = (cmd: string) => {
+    const trimmed = cmd.trim();
+    if (trimmed === "") return;
+    const lowerCmd = trimmed.toLowerCase();
+    const historyUpdate = [...terminalHistory, `guest@campus-bandhu:~$ ${trimmed}`];
+
+    if (lowerCmd === "help") {
+      historyUpdate.push(
+        "Available shell scripts:",
+        "  bio         - Print system summary developer bio",
+        "  stats       - Query database stats (connections, quests, XP)",
+        "  skills      - List categorized developer stack config",
+        "  projects    - Query active folder directory projects",
+        "  experience  - Print employment journey timeline log",
+        "  clear       - Clear terminal console prompt screen"
+      );
+    } else if (lowerCmd === "bio") {
+      historyUpdate.push(
+        `[sys.bio]: "${profile?.bio || "Passionate software engineer building modern decentralized web applications."}"`
+      );
+    } else if (lowerCmd === "stats") {
+      historyUpdate.push(
+        "═ PROFILE STATS DB ══════════════════════════",
+        `  Full Name:   ${profile?.fullName || "User"}`,
+        `  Affiliation: ${profile?.collegeName || "NSUT, New Delhi"}`,
+        `  Connection:  ${profile?.stats?.connections || 0} node synergy links`,
+        `  Quest Logs:  ${profile?.stats?.eventsJoined || 0} registered events`,
+        `  Power Level: ${profile?.stats?.xpPoints || 0} XP (Coder Lvl ${Math.floor((profile?.stats?.xpPoints || 0) / 100) + 1})`
+      );
+    } else if (lowerCmd === "skills") {
+      historyUpdate.push(
+        "═ TECH CONFIG ══════════════════════════════",
+        `  Languages:   ${(groupedSkills["Languages"] || []).join(", ") || "Undeclared"}`,
+        `  Frameworks:  ${(groupedSkills["Frameworks & Tools"] || []).join(", ") || "Undeclared"}`,
+        `  DevOps/Web3: ${(groupedSkills["DevOps & Web3"] || []).join(", ") || "Undeclared"}`,
+        `  Domains:     ${(groupedSkills["Core Domains"] || []).join(", ") || "Undeclared"}`
+      );
+    } else if (lowerCmd === "projects") {
+      if (profile?.projects && profile.projects.length > 0) {
+        historyUpdate.push("═ PROJECT DIRECTORY ═════════════════════════");
+        profile.projects.forEach((proj, idx) => {
+          historyUpdate.push(
+            `  [${idx + 1}] ${proj.title}`,
+            `      Description: ${proj.description}`,
+            proj.githubLink ? `      Repository:  ${proj.githubLink}` : ""
+          );
+        });
+      } else {
+        historyUpdate.push("No projects detected in local workspace directory.");
+      }
+    } else if (lowerCmd === "experience") {
+      if (profile?.experience && profile.experience.length > 0) {
+        historyUpdate.push("═ JOURNEY TIMELINE ══════════════════════════");
+        profile.experience.forEach((exp) => {
+          historyUpdate.push(
+            `  • ${exp.role} @ ${exp.company} (${exp.duration})`,
+            exp.description ? `    Description: ${exp.description}` : ""
+          );
+        });
+      } else {
+        historyUpdate.push("No timeline history items stored in database.");
+      }
+    } else if (lowerCmd === "clear") {
+      setTerminalHistory([]);
+      setTerminalInput("");
+      return;
+    } else {
+      historyUpdate.push(`Command unrecognized: '${trimmed}'. Type 'help' for core commands.`);
+    }
+
+    setTerminalHistory(historyUpdate);
+    setTerminalInput("");
+  };
+
+  // Scroll to bottom of terminal whenever history updates
+  useEffect(() => {
+    terminalEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [terminalHistory]);
+
+  const levelProgress = ((profile?.stats?.xpPoints || 0) % 100);
+  const currentLvl = Math.floor((profile?.stats?.xpPoints || 0) / 100) + 1;
+
   return (
     <AppShell>
       <motion.div variants={stagger.container} initial="initial" animate="animate" className="space-y-6">
         
-        {/* Immersive Bento Grid Container */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 items-start">
+        {/* Futuristic Cyber Bento Grid Layout */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 items-stretch">
           
-          {/* 1. Large Hero Box (Col-span 2, Row-span 2 on desktop) */}
-          <div className="md:col-span-2 lg:col-span-2 space-y-6">
-            <GlassCard className="relative overflow-hidden p-6 rounded-3xl border border-white/[0.08] shadow-2xl">
+          {/* Bento Box 1: Large Hero Block (Col-span 2, Row-span 2 on desktop) */}
+          <div className="md:col-span-2 lg:col-span-2 flex flex-col">
+            <ConsoleWindow title="[shell] - profile.sh" className="h-full flex flex-col justify-between">
               
-              {/* Integrated Inner Cover Photo */}
+              {/* Cover Banner Reposition container */}
               <div 
-                className={`relative h-36 w-full rounded-2xl overflow-hidden group/cover border border-white/5 ${
+                className={`relative h-40 w-full rounded-2xl overflow-hidden group/cover border border-white/5 shrink-0 ${
                   isRepositioningCover ? "cursor-move touch-none select-none z-10" : "cursor-pointer"
                 }`}
                 onClick={() => { if (!isRepositioningCover) setCoverMenuOpen(true); }}
@@ -534,11 +645,11 @@ export default function ProfilePage() {
                   </div>
                 )}
                 <div className="pointer-events-none absolute inset-0 grid-background opacity-20" />
-                <div className="absolute inset-0 bg-gradient-to-t from-[#0d1527]/90 via-transparent to-transparent" />
+                <div className="absolute inset-0 bg-gradient-to-t from-[#070b15]/95 via-transparent to-transparent" />
               </div>
 
-              {/* Avatar overlapping cover banner */}
-              <div className="relative flex items-end gap-5 -mt-10 px-4 mb-4">
+              {/* Avatar profile info */}
+              <div className="relative flex items-end gap-5 -mt-10 px-4 mb-4 shrink-0">
                 <div className="relative group cursor-pointer shrink-0 z-10" onClick={() => setAvatarMenuOpen(true)}>
                   <div className="relative rounded-full p-1 bg-gradient-to-tr from-accent via-purple to-mint shadow-glow-sm transition-all duration-300 group-hover:scale-105 group-hover:shadow-glow-md">
                     <Avatar
@@ -558,9 +669,9 @@ export default function ProfilePage() {
                 </div>
 
                 <div className="min-w-0 pb-1 space-y-1">
-                  <h1 className="font-heading text-2xl font-black text-white tracking-tight flex items-center gap-1.5 leading-none">
+                  <h1 className="font-heading text-2xl font-black text-white tracking-tight flex items-center gap-2 leading-none">
                     {profile?.fullName || "User"}
-                    <span className="text-mint text-sm" title="Verified Professional">✓</span>
+                    <span className="text-mint text-sm animate-pulse" title="System Verified Coder">✓</span>
                   </h1>
                   <div className="flex flex-wrap items-center gap-2">
                     <NeonBadge color={(ROLE_COLORS[role!] || "blue") as any} size="sm">
@@ -574,8 +685,8 @@ export default function ProfilePage() {
                 </div>
               </div>
 
-              {/* Layout metadata list */}
-              <div className="grid grid-cols-2 gap-4 border-y border-white/[0.06] py-4 my-4 text-left">
+              {/* Metadata details grids */}
+              <div className="grid grid-cols-2 gap-4 border-y border-white/[0.06] py-3.5 my-3 text-left shrink-0">
                 <div className="flex items-center gap-3 text-slate hover:text-white transition-colors duration-200">
                   <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-accent/10 border border-accent/20">
                     <MapPin className="h-4 w-4 text-accent" />
@@ -602,44 +713,48 @@ export default function ProfilePage() {
                 </div>
               </div>
 
-              {/* Bio summary blockquote */}
-              <div className="w-full text-left bg-white/[0.01] border-l-2 border-accent/40 rounded-r-xl p-4 mb-4">
-                <p className="text-[9px] font-mono text-accent/50 uppercase tracking-widest font-bold mb-1">// Summary Bio</p>
-                <p className="text-xs text-slate leading-relaxed font-semibold italic">
-                  "{profile?.bio || "Passionate software engineer building modern web applications and decentralized tech structures."}"
-                </p>
+              {/* Connected Social Accounts Grid */}
+              <div className="w-full grid grid-cols-2 gap-2.5 my-2 shrink-0 text-left">
+                <a
+                  href={profile?.githubUrl || "#"}
+                  target="_blank"
+                  rel="noreferrer"
+                  className={cn(
+                    "flex items-center gap-2 rounded-xl border px-3 py-2.5 text-xs font-bold transition-all duration-300",
+                    profile?.githubUrl
+                      ? "border-white/10 bg-white/[0.03] hover:bg-white/[0.08] hover:border-white/20 text-white"
+                      : "border-dashed border-white/5 bg-transparent text-slate/30 pointer-events-none opacity-45"
+                  )}
+                >
+                  <Github className="h-4 w-4 shrink-0 text-purple" />
+                  <span className="truncate">GitHub</span>
+                </a>
+                <a
+                  href={profile?.linkedinUrl || "#"}
+                  target="_blank"
+                  rel="noreferrer"
+                  className={cn(
+                    "flex items-center gap-2 rounded-xl border px-3 py-2.5 text-xs font-bold transition-all duration-300",
+                    profile?.linkedinUrl
+                      ? "border-[#0077b5]/30 bg-[#0077b5]/5 hover:bg-[#0077b5]/15 hover:border-[#0077b5]/50 text-[#0077b5]"
+                      : "border-dashed border-white/5 bg-transparent text-slate/30 pointer-events-none opacity-45"
+                  )}
+                >
+                  <Linkedin className="h-4 w-4 shrink-0" />
+                  <span className="truncate">LinkedIn</span>
+                </a>
               </div>
 
-              {/* Developer Terminal Widget */}
-              <div className="rounded-2xl bg-black/45 border border-white/10 p-4 font-mono text-[10px] text-slate mt-5 text-left leading-relaxed shadow-inner">
-                <div className="flex items-center gap-1.5 border-b border-white/5 pb-2 mb-2.5">
-                  <span className="w-2.5 h-2.5 rounded-full bg-rose/60" />
-                  <span className="w-2.5 h-2.5 rounded-full bg-blaze/60" />
-                  <span className="w-2.5 h-2.5 rounded-full bg-mint/60" />
-                  <span className="text-[9px] text-slate/50 ml-1.5">developer@campus-bandhu: ~</span>
-                </div>
-                <p className="text-accent">$ cat profile.json</p>
-                <div className="mt-1 ml-2">
-                  <p className="text-slate/60">{"{"}</p>
-                  <p className="text-slate/85 ml-4">"fullName": <span className="text-mint">"{profile?.fullName || "User"}"</span>,</p>
-                  <p className="text-slate/85 ml-4">"role": <span className="text-purple">"{ROLE_LABELS[role!] || "Student"}"</span>,</p>
-                  <p className="text-slate/85 ml-4">"connections": <span className="text-cyan">{profile?.stats?.connections || 0}</span>,</p>
-                  <p className="text-slate/85 ml-4">"xpScore": <span className="text-blaze">{profile?.stats?.xpPoints || 0}</span>,</p>
-                  <p className="text-slate/85 ml-4">"status": <span className="text-mint">"coding_active"</span></p>
-                  <p className="text-slate/60 ml-2">{"}"}</p>
-                </div>
-              </div>
-
-              {/* Actions Controls Row */}
-              <div className="flex gap-3 mt-5 w-full">
+              {/* Action operations and Resume */}
+              <div className="flex gap-3 w-full shrink-0">
                 {profile?.resumeUrl && (
                   <a 
                     href={profile.resumeUrl}
                     target="_blank"
                     rel="noreferrer"
-                    className="flex-1 flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-accent to-electric py-2.5 text-xs font-bold text-white shadow-neon transition-all hover:shadow-glow-xs"
+                    className="flex-1 flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-accent to-electric py-2.5 text-xs font-bold text-white shadow-neon transition-all hover:shadow-glow-xs cursor-pointer"
                   >
-                    <ExternalLink className="h-4 w-4" /> CV / Resume
+                    <ExternalLink className="h-4 w-4" /> Download Resume / CV
                   </a>
                 )}
                 <button 
@@ -670,365 +785,407 @@ export default function ProfilePage() {
                     });
                     setIsEditing(true);
                   }}
-                  className="flex-1 flex items-center justify-center gap-2 rounded-xl bg-white/[0.04] border border-white/10 py-2.5 text-xs font-bold text-white hover:bg-white/[0.08] transition-colors"
+                  className="flex-1 flex items-center justify-center gap-2 rounded-xl bg-white/[0.04] border border-white/10 py-2.5 text-xs font-bold text-white hover:bg-white/[0.08] transition-colors cursor-pointer"
                 >
-                  <Edit3 className="h-4 w-4" /> Edit Profile Config
+                  <Edit3 className="h-4 w-4" /> Config Settings
                 </button>
               </div>
-            </GlassCard>
+            </ConsoleWindow>
           </div>
 
-          {/* 2. Metrics List Box (Col-span 1) */}
-          <div className="md:col-span-1 lg:col-span-1 h-full">
-            <GlassCard className="p-6 rounded-3xl border border-white/[0.08] shadow-2xl h-full flex flex-col justify-between">
+          {/* Bento Box 1.5: Interactive Terminal Prompt (Col-span 1) */}
+          <div className="md:col-span-1 lg:col-span-1 flex flex-col">
+            <ConsoleWindow title="[shell] - terminal.sh" className="h-full flex flex-col justify-between font-mono bg-black/85">
+              
+              {/* Terminal History Logs */}
+              <div className="flex-1 overflow-y-auto text-[10px] text-mint leading-relaxed max-h-[280px] pr-1 space-y-1.5 scrollbar-thin scrollbar-thumb-white/10">
+                {terminalHistory.map((line, idx) => (
+                  <p key={idx} className={cn(
+                    line.startsWith("guest@") && "text-accent font-bold",
+                    line.startsWith("═") && "text-slate/40",
+                    !line.startsWith("guest@") && !line.startsWith("═") && "text-mint/95"
+                  )}>
+                    {line}
+                  </p>
+                ))}
+                <div ref={terminalEndRef} />
+              </div>
+
+              {/* Terminal Input Line */}
+              <div className="border-t border-white/5 pt-3 mt-3">
+                <form 
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    executeCommand(terminalInput);
+                  }}
+                  className="flex items-center gap-1.5 text-[10px] text-accent font-bold"
+                >
+                  <span className="shrink-0">guest@campus-bandhu:~$</span>
+                  <input
+                    type="text"
+                    value={terminalInput}
+                    onChange={(e) => setTerminalInput(e.target.value)}
+                    placeholder="run command..."
+                    className="flex-1 bg-transparent text-mint outline-none border-none p-0 text-[10px] font-mono focus:ring-0 placeholder:text-slate/30"
+                  />
+                </form>
+              </div>
+
+              {/* Clickable Macros */}
+              <div className="mt-3.5 pt-3 border-t border-white/5 text-left">
+                <p className="text-[9px] text-slate/50 font-bold mb-2 uppercase tracking-wider">// CLI Macro Shortcuts</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {["bio", "stats", "skills", "projects", "experience"].map((macro) => (
+                    <button
+                      key={macro}
+                      onClick={() => executeCommand(macro)}
+                      className="rounded-lg bg-white/[0.04] border border-white/10 px-2 py-1 text-[9px] font-bold text-slate hover:text-mint hover:border-mint/30 transition-all cursor-pointer select-none"
+                    >
+                      {macro}()
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </ConsoleWindow>
+          </div>
+
+          {/* Bento Box 2: Gamified RPG HUD Player Stats (Col-span 1) */}
+          <div className="md:col-span-1 lg:col-span-1 flex flex-col">
+            <ConsoleWindow title="[system] - profile.cfg" className="h-full flex flex-col justify-between">
               <div className="space-y-4">
-                <h3 className="font-heading text-base font-bold flex items-center gap-2 text-white">
-                  <Zap className="h-5 w-5 text-blaze" /> Overview Metrics
-                </h3>
-                <p className="text-[10px] text-slate font-semibold">// Real-time dashboard performance logs</p>
-
-                <div className="space-y-4 pt-2">
-                  {[
-                    { label: "Events Joined", value: profile?.stats?.eventsJoined || 0, icon: Calendar, color: "text-cyan", bg: "bg-cyan/10 border-cyan/20", pct: "72%" },
-                    { label: "Connections", value: profile?.stats?.connections || 0, icon: Users, color: "text-mint", bg: "bg-mint/10 border-mint/20", pct: "88%" },
-                    { label: "Achievements", value: profile?.stats?.achievements || 0, icon: Trophy, color: "text-purple", bg: "bg-purple/10 border-purple/20", pct: "50%" },
-                    { label: "XP Points", value: profile?.stats?.xpPoints || 0, icon: Sparkles, color: "text-blaze", bg: "bg-blaze/10 border-blaze/20", pct: "84%" },
-                  ].map((stat) => {
-                    const StatIcon = stat.icon;
-                    return (
-                      <div key={stat.label} className="p-3.5 rounded-2xl bg-white/[0.01] border border-white/[0.04] space-y-2 hover:border-white/10 transition-colors duration-200">
-                        <div className="flex justify-between items-center">
-                          <div className="flex items-center gap-2.5">
-                            <div className={cn("flex h-7 w-7 items-center justify-center rounded-lg border", stat.bg)}>
-                              <StatIcon className={cn("h-4 w-4", stat.color)} />
-                            </div>
-                            <span className="text-xs font-bold text-slate">{stat.label}</span>
-                          </div>
-                          <span className={cn("text-base font-black font-mono", stat.color)}>
-                            <AnimatedCounter value={stat.value} />
-                          </span>
-                        </div>
-                        <div className="h-1.5 w-full bg-white/[0.03] rounded-full overflow-hidden border border-white/[0.02]">
-                          <div className={cn("h-full rounded-full", stat.color.replace("text-", "bg-"))} style={{ width: stat.pct }} />
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* Social Accounts Grid panel */}
-              <div className="mt-6 border-t border-white/[0.06] pt-4 text-left space-y-2">
-                <p className="text-[9px] font-mono text-slate/50 uppercase tracking-widest font-bold">// Quick Handles</p>
-                <div className="grid grid-cols-2 gap-2">
-                  <a
-                    href={profile?.githubUrl || "#"}
-                    target="_blank"
-                    rel="noreferrer"
-                    className={cn(
-                      "flex items-center gap-1.5 rounded-xl border px-3 py-2 text-[10px] font-bold transition-all duration-300",
-                      profile?.githubUrl
-                        ? "border-white/10 bg-white/[0.02] hover:bg-white/[0.06] text-white"
-                        : "border-dashed border-white/5 bg-transparent text-subtle pointer-events-none opacity-40"
-                    )}
-                  >
-                    <Github className="h-3.5 w-3.5" /> github
-                  </a>
-                  <a
-                    href={profile?.linkedinUrl || "#"}
-                    target="_blank"
-                    rel="noreferrer"
-                    className={cn(
-                      "flex items-center gap-1.5 rounded-xl border px-3 py-2 text-[10px] font-bold transition-all duration-300",
-                      profile?.linkedinUrl
-                        ? "border-white/10 bg-white/[0.02] hover:bg-white/[0.06] text-white"
-                        : "border-dashed border-white/5 bg-transparent text-subtle pointer-events-none opacity-40"
-                    )}
-                  >
-                    <Linkedin className="h-3.5 w-3.5" /> linkedin
-                  </a>
-                </div>
-              </div>
-            </GlassCard>
-          </div>
-
-          {/* 3. GitHub Contributions (Full-Width, Col-span 3) */}
-          {githubUsername && (
-            <div className="md:col-span-2 lg:col-span-3">
-              <GlassCard className="rounded-3xl border border-white/[0.08] shadow-2xl p-5">
-                <h3 className="mb-1 font-heading text-base font-bold flex items-center gap-2 text-white">
-                  <Github className="h-5 w-5 text-purple" /> GitHub Contributions & Activity
-                </h3>
-                <p className="text-xs text-slate mb-4 font-semibold">Real-time commit streaks and active repositories synchronization.</p>
-                
-                <div className="overflow-hidden rounded-2xl border border-white/[0.06] bg-white/[0.01] p-4 flex flex-col md:flex-row gap-4 items-center justify-between">
-                  <div className="w-full md:w-auto min-w-0 flex-1 overflow-x-auto scrollbar-none">
-                    <img 
-                      src={`https://ghchart.rshah.org/8b5cf6/${githubUsername}`} 
-                      alt="GitHub Contribution Calendar" 
-                      className="h-28 object-contain filter hover:brightness-110 transition-all duration-300 mx-auto"
-                    />
-                  </div>
-
-                  <div className="flex gap-4 self-stretch md:self-auto justify-around shrink-0 md:pl-5 md:border-l border-white/[0.06]">
-                    <div className="text-center px-4">
-                      <p className="font-heading text-2xl font-black text-mint">{currentStreak}</p>
-                      <p className="text-[9px] text-slate font-bold uppercase tracking-widest font-mono mt-0.5">Active Streak</p>
-                    </div>
-                    <div className="text-center px-4">
-                      <p className="font-heading text-2xl font-black text-accent">{totalCommits}</p>
-                      <p className="text-[9px] text-slate font-bold uppercase tracking-widest font-mono mt-0.5">Commits</p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Synced Repository Row */}
-                <div className="mt-5 border-t border-white/[0.06] pt-4">
-                  <p className="text-[10px] font-bold text-slate uppercase tracking-wider font-mono mb-3">Synced Repository List</p>
-                  <div className="flex gap-4 overflow-x-auto pb-2 snap-x snap-mandatory scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
-                    {loadingRepos ? (
-                      Array.from({ length: 4 }).map((_, idx) => (
-                        <div 
-                          key={idx} 
-                          className="min-w-[260px] max-w-[260px] rounded-xl border border-white/[0.04] bg-white/[0.01] p-3.5 snap-align-start shrink-0 flex flex-col justify-between animate-pulse"
-                        >
-                          <div>
-                            <div className="flex items-center justify-between gap-2 mb-3">
-                              <div className="h-3 w-28 bg-white/10 rounded" />
-                              <div className="h-3 w-12 bg-white/5 rounded" />
-                            </div>
-                            <div className="space-y-2 mb-4">
-                              <div className="h-2 w-full bg-white/5 rounded" />
-                              <div className="h-2 w-3/4 bg-white/5 rounded" />
-                            </div>
-                          </div>
-                          <div className="flex items-center justify-between border-t border-white/[0.04] pt-2">
-                            <div className="h-2.5 w-16 bg-white/10 rounded" />
-                            <div className="h-2.5 w-20 bg-white/5 rounded" />
-                          </div>
-                        </div>
-                      ))
-                    ) : (
-                      (repositories.length > 0 ? repositories : [
-                        { name: "campus-bandhu-os", description: "Smart Campus Operating System with AI Matching, real-time sync, and glassmorphic dashboards.", language: "TypeScript", forks: 12, stars: 128, tag: "Highest Fork", html_url: `https://github.com/${githubUsername}/campus-bandhu-os` },
-                        { name: "ai-matching-radar", description: "Skills compatibility matching engine using cosine similarity calculations and fuzzy match logic.", language: "Python", forks: 8, stars: 242, tag: "Most Star", html_url: `https://github.com/${githubUsername}/ai-matching-radar` },
-                        { name: "web3-buildathon-contracts", description: "Smart contracts and decentralized verification logic for NFT credential distribution.", language: "Solidity", forks: 4, stars: 38, tag: "New", html_url: `https://github.com/${githubUsername}/web3-buildathon-contracts` },
-                        { name: "leetcode-stats-api", description: "Serverless endpoints to fetch, compile, and visual solve parameters for competitive coding profiles.", language: "TypeScript", forks: 2, stars: 15, tag: "", html_url: `https://github.com/${githubUsername}/leetcode-stats-api` },
-                      ]).map((repo) => (
-                        <a 
-                          key={repo.name} 
-                          href={repo.html_url || "#"}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="min-w-[260px] max-w-[260px] rounded-2xl border border-white/[0.04] bg-white/[0.01] p-4 hover:bg-white/[0.03] hover:border-purple/35 transition-all snap-align-start shrink-0 flex flex-col justify-between group/repo cursor-pointer shadow-md"
-                        >
-                          <div>
-                            <div className="flex items-center justify-between gap-2 mb-2">
-                              <span className="font-mono text-xs font-semibold text-white group-hover/repo:text-accent transition-colors truncate max-w-[150px]">{repo.name}</span>
-                              {repo.tag && (
-                                <span className={cn(
-                                  "text-[8px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wider",
-                                  repo.tag === "New" && "bg-electric/10 text-electric border border-electric/20",
-                                  repo.tag === "Highest Fork" && "bg-purple/10 text-purple border border-purple/20 shadow-glow-xs animate-pulse",
-                                  repo.tag === "Most Star" && "bg-mint/10 text-mint border border-mint/20 shadow-glow-xs"
-                                )}>
-                                  {repo.tag}
-                                </span>
-                              )}
-                            </div>
-                            <p className="text-[10px] text-slate leading-relaxed line-clamp-2 mb-3">{repo.description}</p>
-                          </div>
-                          
-                          <div className="flex items-center justify-between text-[9px] text-slate border-t border-white/[0.04] pt-2 mt-2">
-                            <span className="flex items-center gap-1.5 font-bold">
-                              <span className={cn(
-                                "w-1.5 h-1.5 rounded-full",
-                                repo.language === "TypeScript" && "bg-[#3178c6]",
-                                repo.language === "Python" && "bg-[#3572a5]",
-                                repo.language === "Solidity" && "bg-[#f18b11]",
-                                !["TypeScript", "Python", "Solidity"].includes(repo.language) && "bg-accent"
-                              )} /> {repo.language}
-                            </span>
-                            <span className="flex items-center gap-3 font-semibold">
-                              <span>🍴 {repo.forks}</span>
-                              <span>⭐ {repo.stars}</span>
-                            </span>
-                          </div>
-                        </a>
-                      ))
-                    )}
-                  </div>
-                </div>
-              </GlassCard>
-            </div>
-          )}
-
-          {/* 4. Projects Showcase (Col-span 2) */}
-          <div className="md:col-span-2 lg:col-span-2">
-            <GlassCard className="rounded-3xl border border-white/[0.08] shadow-2xl p-5">
-              <div className="flex items-center justify-between mb-4">
-                <div>
+                <div className="flex justify-between items-center">
                   <h3 className="font-heading text-base font-bold flex items-center gap-2 text-white">
-                    <Code2 className="h-5 w-5 text-accent" /> Creations Showcase
+                    <Sparkles className="h-5 w-5 text-blaze" /> Player Status
                   </h3>
-                  <p className="text-[10px] text-slate font-semibold mt-0.5">Explore selected software and design builds.</p>
+                  <span className="text-[9px] font-mono text-mint font-extrabold uppercase bg-mint/5 border border-mint/20 px-2 py-0.5 rounded shadow-glow-xs animate-pulse">ACTIVE_SYSTEM</span>
                 </div>
-                <button 
-                  onClick={() => setIsAddProjectOpen(true)}
-                  className="flex items-center gap-1 text-[10px] font-bold text-accent border border-accent/20 bg-accent/5 hover:bg-accent/10 px-3 py-1.5 rounded-xl cursor-pointer transition-colors shadow-glow-xs"
-                >
-                  <Plus className="h-3.5 w-3.5" /> Add Project
-                </button>
-              </div>
 
-              {profile?.projects && profile.projects.length > 0 ? (
-                <div className="grid gap-5 sm:grid-cols-2">
-                  {profile.projects.map((proj, i) => (
-                    <div key={i} className="group relative rounded-2xl border border-white/[0.06] bg-gradient-to-b from-white/[0.01] to-white/[0.02] overflow-hidden flex flex-col justify-between transition-all duration-300 hover:bg-white/[0.03] hover:border-accent/40 hover:-translate-y-1 hover:shadow-glow-sm p-4">
+                {/* Monospace level indicators */}
+                <div className="p-4 rounded-2xl bg-[#090e1a]/80 border border-white/[0.04] space-y-3 shadow-inner">
+                  <div className="flex justify-between items-end">
+                    <div>
+                      <p className="text-[9px] font-mono text-slate/40 uppercase tracking-widest font-bold">SYSTEM LEVEL</p>
+                      <p className="font-heading text-lg font-black text-white">Level {currentLvl} Coder</p>
+                    </div>
+                    <span className="text-[10px] font-mono font-bold text-blaze">{profile?.stats?.xpPoints || 0} TOTAL XP</span>
+                  </div>
+                  
+                  <div className="space-y-1.5">
+                    <div className="flex justify-between text-[9px] font-mono font-bold text-slate/60">
+                      <span>NEXT LEVEL EXP</span>
+                      <span>{levelProgress} / 100</span>
+                    </div>
+                    <div className="h-2 w-full bg-white/[0.03] rounded-full overflow-hidden border border-white/[0.02] relative">
+                      <div className="h-full rounded-full bg-gradient-to-r from-blaze to-accent shadow-glow-xs transition-all duration-500" style={{ width: `${levelProgress}%` }} />
+                    </div>
+                  </div>
+                </div>
+
+                {/* System attributes stats list */}
+                <div className="space-y-3 pt-2 text-[11px] font-mono">
+                  <p className="text-[9px] text-slate/40 uppercase tracking-widest font-bold font-mono">// RPG Attributes</p>
+                  {[
+                    { name: "Node Synergy", value: profile?.stats?.connections || 0, desc: "Total connection points", color: "text-mint" },
+                    { name: "Quests Log", value: profile?.stats?.eventsJoined || 0, desc: "Events attended completed", color: "text-cyan" },
+                    { name: "Artifacts Unlocked", value: profile?.stats?.achievements || 0, desc: "Collectibles & achievements", color: "text-purple" },
+                    { name: "Terminal Power", value: profile?.stats?.xpPoints || 0, desc: "Active system experience score", color: "text-blaze" },
+                  ].map((attr) => (
+                    <div key={attr.name} className="flex items-center justify-between p-2.5 rounded-xl bg-white/[0.01] border border-white/[0.03] hover:border-white/10 transition-colors duration-200">
                       <div>
-                        {proj.photoUrl ? (
-                          <div className="h-28 w-full rounded-xl overflow-hidden border border-white/[0.04] mb-3 relative">
-                            <img src={proj.photoUrl} alt={proj.title} className="h-full w-full object-cover group-hover:scale-105 transition-all duration-500" />
-                            <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-2">
-                              <span className="text-[8px] font-bold text-white bg-accent/75 rounded px-2 py-0.5">Active Project</span>
-                            </div>
-                          </div>
-                        ) : (
-                          <div className="h-28 w-full rounded-xl bg-gradient-to-br from-accent/15 via-purple/10 to-electric/15 border border-white/[0.06] mb-3 flex items-center justify-center relative overflow-hidden">
-                            <div className="absolute inset-0 grid-background opacity-20" />
-                            <Code2 className="h-8 w-8 text-accent/30 relative z-10 animate-pulse" />
-                          </div>
-                        )}
-                        
-                        <div className="flex justify-between items-start">
-                          <h4 className="font-black text-sm text-white truncate max-w-[85%]">{proj.title}</h4>
-                          <button 
-                            onClick={() => handleDeleteProject(i)}
-                            className="opacity-0 group-hover:opacity-100 transition-opacity p-1 text-slate hover:text-rose cursor-pointer"
-                          >
-                            <Trash2 className="h-3.5 w-3.5" />
-                          </button>
-                        </div>
-                        <p className="text-xs text-slate mt-1.5 leading-relaxed line-clamp-3 font-semibold">{proj.description}</p>
+                        <p className="font-bold text-white">{attr.name}</p>
+                        <p className="text-[9px] text-slate font-semibold">{attr.desc}</p>
                       </div>
-
-                      <div className="mt-4 flex gap-2 border-t border-white/[0.04] pt-3">
-                        {proj.githubLink && (
-                          <a 
-                            href={proj.githubLink} 
-                            target="_blank" 
-                            rel="noreferrer" 
-                            className="flex-1 flex items-center justify-center gap-1.5 rounded-lg bg-white/[0.04] hover:bg-white/[0.08] py-1.5 text-[9px] font-bold text-white transition-colors"
-                          >
-                            <Github className="h-3.5 w-3.5" /> GitHub Code
-                          </a>
-                        )}
-                        {proj.youtubeLink && (
-                          <a 
-                            href={proj.youtubeLink} 
-                            target="_blank" 
-                            rel="noreferrer" 
-                            className="flex-1 flex items-center justify-center gap-1.5 rounded-lg bg-rose/10 hover:bg-rose/20 py-1.5 text-[9px] font-bold text-rose transition-colors"
-                          >
-                            🎥 Video Demo
-                          </a>
-                        )}
-                      </div>
+                      <span className={cn("text-sm font-black", attr.color)}>{attr.value}</span>
                     </div>
                   ))}
                 </div>
-              ) : (
-                <div className="text-center py-8 rounded-xl border border-dashed border-white/10 bg-white/[0.01]">
-                  <Folder className="h-8 w-8 text-slate/30 mx-auto mb-2" />
-                  <p className="text-xs text-slate italic mb-3 font-semibold">No custom projects showcased yet.</p>
-                  <button 
-                    onClick={() => setIsAddProjectOpen(true)}
-                    className="mx-auto flex items-center gap-1 text-[10px] font-bold text-accent cursor-pointer"
-                  >
-                    Create one now
-                  </button>
-                </div>
-              )}
-            </GlassCard>
+              </div>
+            </ConsoleWindow>
           </div>
 
-          {/* 5. LeetCode Solving Box (Col-span 1) */}
-          {profile?.leetcodeUrl && (
-            <div className="md:col-span-1 lg:col-span-1">
-              <GlassCard className="rounded-3xl border border-white/[0.08] shadow-2xl p-5 space-y-4">
-                <h3 className="font-heading text-base font-bold flex items-center gap-2 text-white">
-                  <span className="text-[#FFA116] font-black text-lg animate-pulse">LC</span> LeetCode Analytics
-                </h3>
-                <p className="text-[10px] text-slate font-semibold">// Live solving statistics sync</p>
+          {/* Bento Box 3: GitHub Contributions (Full-Width, Col-span 3) */}
+          {githubUsername && (
+            <div className="md:col-span-2 lg:col-span-3 flex flex-col">
+              <ConsoleWindow title="[github] - contributions.log" className="h-full flex flex-col justify-between">
+                <div>
+                  <h3 className="mb-1 font-heading text-base font-bold flex items-center gap-2 text-white">
+                    <Github className="h-5 w-5 text-purple animate-spin-slow" /> GitHub Activity Tracker
+                  </h3>
+                  <p className="text-xs text-slate mb-4 font-semibold">Repository synchronization commits calendar log.</p>
+                  
+                  <div className="overflow-hidden rounded-2xl border border-white/[0.06] bg-white/[0.01] p-4 flex flex-col md:flex-row gap-4 items-center justify-between">
+                    <div className="w-full md:w-auto min-w-0 flex-1 overflow-x-auto scrollbar-none">
+                      <img 
+                        src={`https://ghchart.rshah.org/8b5cf6/${githubUsername}`} 
+                        alt="GitHub Contribution Calendar" 
+                        className="h-28 object-contain filter hover:brightness-110 transition-all duration-300 mx-auto"
+                      />
+                    </div>
 
-                <div className="flex flex-col items-center justify-center p-2">
-                  <div className="relative w-24 h-24 flex items-center justify-center">
-                    <svg className="absolute w-full h-full transform -rotate-90">
-                      <circle cx="48" cy="48" r="40" stroke="rgba(255,255,255,0.03)" strokeWidth="6" fill="transparent" />
-                      <circle cx="48" cy="48" r="40" stroke="#FFA116" strokeWidth="6" fill="transparent" strokeDasharray="251.2" strokeDashoffset="129.6" strokeLinecap="round" className="drop-shadow-[0_0_8px_rgba(255,161,22,0.3)] animate-pulse" />
-                    </svg>
-                    <div className="text-center z-10">
-                      <p className="font-heading text-2xl font-black text-white">242</p>
-                      <p className="text-[8px] text-slate uppercase tracking-widest font-mono font-bold">Solved</p>
+                    <div className="flex gap-4 self-stretch md:self-auto justify-around shrink-0 md:pl-5 md:border-l border-white/[0.06]">
+                      <div className="text-center px-4 font-mono">
+                        <p className="font-heading text-2xl font-black text-mint">{currentStreak}</p>
+                        <p className="text-[9px] text-slate font-bold uppercase tracking-widest mt-0.5">Commit Streak</p>
+                      </div>
+                      <div className="text-center px-4 font-mono">
+                        <p className="font-heading text-2xl font-black text-accent">{totalCommits}</p>
+                        <p className="text-[9px] text-slate font-bold uppercase tracking-widest mt-0.5">Total Commits</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Sync repositories horizontal list */}
+                  <div className="mt-5 border-t border-white/[0.06] pt-4">
+                    <p className="text-[10px] font-bold text-slate uppercase tracking-wider font-mono mb-3">Sync Directory Tree</p>
+                    <div className="flex gap-4 overflow-x-auto pb-2 snap-x snap-mandatory scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
+                      {loadingRepos ? (
+                        Array.from({ length: 4 }).map((_, idx) => (
+                          <div 
+                            key={idx} 
+                            className="min-w-[260px] max-w-[260px] rounded-xl border border-white/[0.04] bg-white/[0.01] p-3 snap-align-start shrink-0 flex flex-col justify-between animate-pulse animate-duration-750"
+                          >
+                            <div>
+                              <div className="flex items-center justify-between gap-2 mb-3">
+                                <div className="h-3 w-28 bg-white/10 rounded" />
+                                <div className="h-3 w-12 bg-white/5 rounded" />
+                              </div>
+                              <div className="space-y-2 mb-4">
+                                <div className="h-2 w-full bg-white/5 rounded" />
+                                <div className="h-2 w-3/4 bg-white/5 rounded" />
+                              </div>
+                            </div>
+                            <div className="flex items-center justify-between border-t border-white/[0.04] pt-2">
+                              <div className="h-2.5 w-16 bg-white/10 rounded" />
+                              <div className="h-2.5 w-20 bg-white/5 rounded" />
+                            </div>
+                          </div>
+                        ))
+                      ) : (
+                        (repositories.length > 0 ? repositories : [
+                          { name: "campus-bandhu-os", description: "Smart Campus Operating System with AI Matching, real-time sync, and glassmorphic dashboards.", language: "TypeScript", forks: 12, stars: 128, tag: "Highest Fork", html_url: `https://github.com/${githubUsername}/campus-bandhu-os` },
+                          { name: "ai-matching-radar", description: "Skills compatibility matching engine using cosine similarity calculations and fuzzy match logic.", language: "Python", forks: 8, stars: 242, tag: "Most Star", html_url: `https://github.com/${githubUsername}/ai-matching-radar` },
+                          { name: "web3-buildathon-contracts", description: "Smart contracts and decentralized verification logic for NFT credential distribution.", language: "Solidity", forks: 4, stars: 38, tag: "New", html_url: `https://github.com/${githubUsername}/web3-buildathon-contracts` },
+                          { name: "leetcode-stats-api", description: "Serverless endpoints to fetch, compile, and visual solve parameters for competitive coding profiles.", language: "TypeScript", forks: 2, stars: 15, tag: "", html_url: `https://github.com/${githubUsername}/leetcode-stats-api` },
+                        ]).map((repo) => (
+                          <a 
+                            key={repo.name} 
+                            href={repo.html_url || "#"}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="min-w-[260px] max-w-[260px] rounded-2xl border border-white/[0.04] bg-white/[0.01] p-4 hover:bg-white/[0.03] hover:border-purple/35 transition-all snap-align-start shrink-0 flex flex-col justify-between group/repo cursor-pointer shadow-md"
+                          >
+                            <div>
+                              <div className="flex items-center justify-between gap-2 mb-2">
+                                <span className="font-mono text-xs font-semibold text-white group-hover/repo:text-accent transition-colors truncate max-w-[150px]">{repo.name}</span>
+                                {repo.tag && (
+                                  <span className={cn(
+                                    "text-[8px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wider",
+                                    repo.tag === "New" && "bg-electric/10 text-electric border border-electric/20",
+                                    repo.tag === "Highest Fork" && "bg-purple/10 text-purple border border-purple/20 shadow-glow-xs animate-pulse",
+                                    repo.tag === "Most Star" && "bg-mint/10 text-mint border border-mint/20 shadow-glow-xs"
+                                  )}>
+                                    {repo.tag}
+                                  </span>
+                                )}
+                              </div>
+                              <p className="text-[10px] text-slate leading-relaxed line-clamp-2 mb-3">{repo.description}</p>
+                            </div>
+                            
+                            <div className="flex items-center justify-between text-[9px] text-slate border-t border-white/[0.04] pt-2 mt-2 font-mono">
+                              <span className="flex items-center gap-1.5 font-bold">
+                                <span className={cn(
+                                  "w-1.5 h-1.5 rounded-full",
+                                  repo.language === "TypeScript" && "bg-[#3178c6]",
+                                  repo.language === "Python" && "bg-[#3572a5]",
+                                  repo.language === "Solidity" && "bg-[#f18b11]",
+                                  !["TypeScript", "Python", "Solidity"].includes(repo.language) && "bg-accent"
+                                )} /> {repo.language}
+                              </span>
+                              <span className="flex items-center gap-3 font-semibold">
+                                <span>🍴 {repo.forks}</span>
+                                <span>⭐ {repo.stars}</span>
+                              </span>
+                            </div>
+                          </a>
+                        ))
+                      )}
                     </div>
                   </div>
                 </div>
-
-                <div className="space-y-3.5">
-                  <div>
-                    <div className="flex justify-between text-[9px] text-slate mb-1">
-                      <span className="font-bold text-white">Easy Problems</span>
-                      <span className="font-bold text-mint">142 / 250</span>
-                    </div>
-                    <div className="h-1.5 w-full rounded-full bg-white/[0.03] overflow-hidden border border-white/[0.04]">
-                      <div className="h-full bg-mint rounded-full shadow-glow-xs" style={{ width: "56.8%" }} />
-                    </div>
-                  </div>
-                  <div>
-                    <div className="flex justify-between text-[9px] text-slate mb-1">
-                      <span className="font-bold text-white">Medium Problems</span>
-                      <span className="font-bold text-[#FFA116]">88 / 200</span>
-                    </div>
-                    <div className="h-1.5 w-full rounded-full bg-white/[0.03] overflow-hidden border border-white/[0.04]">
-                      <div className="h-full bg-[#FFA116] rounded-full shadow-glow-xs" style={{ width: "44%" }} />
-                    </div>
-                  </div>
-                  <div>
-                    <div className="flex justify-between text-[9px] text-slate mb-1">
-                      <span className="font-bold text-white">Hard Problems</span>
-                      <span className="font-bold text-rose">12 / 50</span>
-                    </div>
-                    <div className="h-1.5 w-full rounded-full bg-white/[0.03] overflow-hidden border border-white/[0.04]">
-                      <div className="h-full bg-rose rounded-full shadow-glow-xs" style={{ width: "24%" }} />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Hacker Badges */}
-                <div className="pt-3 border-t border-white/[0.06] space-y-2 text-left">
-                  <p className="text-[9px] text-slate uppercase tracking-wider font-extrabold font-mono">// Badges</p>
-                  <div className="flex gap-2">
-                    <div className="floating-card flex-1 rounded-xl bg-white/[0.02] border border-[#FFA116]/25 p-2 text-center transition-all hover:bg-white/[0.04] hover:shadow-glow-xs" title="Solved 50+ Dynamic Programming questions">
-                      <span className="text-xl block">🛡️</span>
-                      <p className="text-[8px] font-black text-white mt-1">DP Knight</p>
-                    </div>
-                    <div className="floating-card flex-1 rounded-xl bg-white/[0.02] border border-purple/35 p-2 text-center transition-all hover:bg-white/[0.04]" title="Solved 30+ Graph questions">
-                      <span className="text-xl block">🌀</span>
-                      <p className="text-[8px] font-black text-white mt-1">Graph</p>
-                    </div>
-                    <div className="floating-card flex-1 rounded-xl bg-white/[0.02] border border-cyan/35 p-2 text-center transition-all hover:bg-white/[0.04]" title="45 Days Active Streak">
-                      <span className="text-xl block">🔥</span>
-                      <p className="text-[8px] font-black text-white mt-1">Streak</p>
-                    </div>
-                  </div>
-                </div>
-              </GlassCard>
+              </ConsoleWindow>
             </div>
           )}
 
-          {/* 6. Timeline Journey (Col-span 2) */}
-          <div className="md:col-span-2 lg:col-span-2 space-y-6">
-            <GlassCard className="rounded-3xl border border-white/[0.08] shadow-2xl p-5">
+          {/* Bento Box 4: Creations Directory Showcase (Col-span 2) */}
+          <div className="md:col-span-2 lg:col-span-2 flex flex-col">
+            <ConsoleWindow title="[json] - creations.json" className="h-full flex flex-col justify-between">
+              <div>
+                <div className="flex items-center justify-between mb-4 shrink-0">
+                  <div>
+                    <h3 className="font-heading text-base font-bold flex items-center gap-2 text-white">
+                      <Code2 className="h-5 w-5 text-accent animate-pulse" /> Projects directory
+                    </h3>
+                    <p className="text-[10px] text-slate font-semibold mt-0.5">Showcase developer builds folder files.</p>
+                  </div>
+                  <button 
+                    onClick={() => setIsAddProjectOpen(true)}
+                    className="flex items-center gap-1.5 text-xs font-bold text-accent border border-accent/20 bg-accent/5 hover:bg-accent/10 px-3.5 py-1.5 rounded-xl cursor-pointer transition-colors shadow-glow-xs select-none"
+                  >
+                    <Plus className="h-4 w-4" /> Add Project
+                  </button>
+                </div>
+
+                {profile?.projects && profile.projects.length > 0 ? (
+                  <div className="grid gap-5 sm:grid-cols-2">
+                    {profile.projects.map((proj, i) => (
+                      <div key={i} className="group relative rounded-2xl border border-white/[0.06] bg-gradient-to-b from-white/[0.01] to-white/[0.02] overflow-hidden flex flex-col justify-between transition-all duration-300 hover:bg-white/[0.03] hover:border-accent/40 hover:-translate-y-1 hover:shadow-glow-sm p-4">
+                        <div>
+                          {proj.photoUrl ? (
+                            <div className="h-28 w-full rounded-xl overflow-hidden border border-white/[0.04] mb-3 relative">
+                              <img src={proj.photoUrl} alt={proj.title} className="h-full w-full object-cover group-hover:scale-105 transition-all duration-500" />
+                              <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-2.5">
+                                <span className="text-[8px] font-bold text-white bg-accent/75 rounded px-2.5 py-0.5">Active Build</span>
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="h-28 w-full rounded-xl bg-gradient-to-br from-accent/15 via-purple/10 to-electric/15 border border-white/[0.06] mb-3 flex items-center justify-center relative overflow-hidden">
+                              <div className="absolute inset-0 grid-background opacity-20" />
+                              <Code2 className="h-9 w-9 text-accent/30 relative z-10 animate-pulse" />
+                            </div>
+                          )}
+                          
+                          <div className="flex justify-between items-start">
+                            <h4 className="font-black text-sm text-white truncate max-w-[85%]">{proj.title}</h4>
+                            <button 
+                              onClick={() => handleDeleteProject(i)}
+                              className="opacity-0 group-hover:opacity-100 transition-opacity p-1 text-slate hover:text-rose cursor-pointer"
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </button>
+                          </div>
+                          <p className="text-xs text-slate mt-1.5 leading-relaxed line-clamp-3 font-semibold">{proj.description}</p>
+                        </div>
+
+                        <div className="mt-4 flex gap-2 border-t border-white/[0.04] pt-3">
+                          {proj.githubLink && (
+                            <a 
+                              href={proj.githubLink} 
+                              target="_blank" 
+                              rel="noreferrer" 
+                              className="flex-1 flex items-center justify-center gap-1.5 rounded-lg bg-white/[0.04] hover:bg-white/[0.08] py-1.5 text-[9px] font-bold text-white transition-colors"
+                            >
+                              <Github className="h-3.5 w-3.5" /> GitHub Code
+                            </a>
+                          )}
+                          {proj.youtubeLink && (
+                            <a 
+                              href={proj.youtubeLink} 
+                              target="_blank" 
+                              rel="noreferrer" 
+                              className="flex-1 flex items-center justify-center gap-1.5 rounded-lg bg-rose/10 hover:bg-rose/20 py-1.5 text-[9px] font-bold text-rose transition-colors"
+                            >
+                              🎥 Video Demo
+                            </a>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-8 rounded-xl border border-dashed border-white/10 bg-white/[0.01]">
+                    <Folder className="h-8 w-8 text-slate/30 mx-auto mb-2" />
+                    <p className="text-xs text-slate italic mb-3 font-semibold">No custom projects showcased yet.</p>
+                    <button 
+                      onClick={() => setIsAddProjectOpen(true)}
+                      className="mx-auto flex items-center gap-1 text-[10px] font-bold text-accent cursor-pointer"
+                    >
+                      Create one now
+                    </button>
+                  </div>
+                )}
+              </div>
+            </ConsoleWindow>
+          </div>
+
+          {/* Bento Box 5: LeetCode Solving status (Col-span 1) */}
+          {profile?.leetcodeUrl && (
+            <div className="md:col-span-1 lg:col-span-1 flex flex-col">
+              <ConsoleWindow title="[leetcode] - analytics.api" className="h-full flex flex-col justify-between">
+                <div className="space-y-4">
+                  <h3 className="font-heading text-base font-bold flex items-center gap-2 text-white">
+                    <span className="text-[#FFA116] font-black text-lg animate-pulse">LC</span> Solved metrics
+                  </h3>
+                  <p className="text-[10px] text-slate font-semibold">// Live solving statistics query</p>
+
+                  <div className="flex flex-col items-center justify-center p-2">
+                    <div className="relative w-24 h-24 flex items-center justify-center">
+                      <svg className="absolute w-full h-full transform -rotate-90">
+                        <circle cx="48" cy="48" r="40" stroke="rgba(255,255,255,0.03)" strokeWidth="6" fill="transparent" />
+                        <circle cx="48" cy="48" r="40" stroke="#FFA116" strokeWidth="6" fill="transparent" strokeDasharray="251.2" strokeDashoffset="129.6" strokeLinecap="round" className="drop-shadow-[0_0_8px_rgba(255,161,22,0.3)] animate-pulse animate-duration-1000" />
+                      </svg>
+                      <div className="text-center z-10 font-mono">
+                        <p className="font-heading text-2xl font-black text-white">242</p>
+                        <p className="text-[8px] text-slate uppercase tracking-widest font-mono font-bold">Solved</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-3">
+                    <div>
+                      <div className="flex justify-between text-[9px] text-slate mb-1">
+                        <span className="font-bold text-white">Easy Problems</span>
+                        <span className="font-bold text-mint">142 / 250</span>
+                      </div>
+                      <div className="h-1.5 w-full rounded-full bg-white/[0.03] overflow-hidden border border-white/[0.04]">
+                        <div className="h-full bg-mint rounded-full shadow-glow-xs" style={{ width: "56.8%" }} />
+                      </div>
+                    </div>
+                    <div>
+                      <div className="flex justify-between text-[9px] text-slate mb-1">
+                        <span className="font-bold text-white">Medium Problems</span>
+                        <span className="font-bold text-[#FFA116]">88 / 200</span>
+                      </div>
+                      <div className="h-1.5 w-full rounded-full bg-white/[0.03] overflow-hidden border border-white/[0.04]">
+                        <div className="h-full bg-[#FFA116] rounded-full shadow-glow-xs" style={{ width: "44%" }} />
+                      </div>
+                    </div>
+                    <div>
+                      <div className="flex justify-between text-[9px] text-slate mb-1">
+                        <span className="font-bold text-white">Hard Problems</span>
+                        <span className="font-bold text-rose">12 / 50</span>
+                      </div>
+                      <div className="h-1.5 w-full rounded-full bg-white/[0.03] overflow-hidden border border-white/[0.04]">
+                        <div className="h-full bg-rose rounded-full shadow-glow-xs" style={{ width: "24%" }} />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Hacker Badges */}
+                  <div className="pt-3 border-t border-white/[0.06] space-y-2 text-left font-mono">
+                    <p className="text-[9px] text-slate/40 uppercase tracking-widest font-bold font-mono">// Earned Badges</p>
+                    <div className="flex gap-2">
+                      <div className="floating-card flex-1 rounded-xl bg-white/[0.02] border border-[#FFA116]/25 p-2 text-center transition-all hover:bg-white/[0.04] hover:shadow-glow-xs" title="Solved 50+ Dynamic Programming questions">
+                        <span className="text-xl block">🛡️</span>
+                        <p className="text-[8px] font-black text-white mt-1">DP Knight</p>
+                      </div>
+                      <div className="floating-card flex-1 rounded-xl bg-white/[0.02] border border-purple/35 p-2 text-center transition-all hover:bg-white/[0.04]" title="Solved 30+ Graph questions">
+                        <span className="text-xl block">🌀</span>
+                        <p className="text-[8px] font-black text-white mt-1">Graph</p>
+                      </div>
+                      <div className="floating-card flex-1 rounded-xl bg-white/[0.02] border border-cyan/35 p-2 text-center transition-all hover:bg-white/[0.04]" title="45 Days Active Streak">
+                        <span className="text-xl block">🔥</span>
+                        <p className="text-[8px] font-black text-white mt-1">Streak</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </ConsoleWindow>
+            </div>
+          )}
+
+          {/* Bento Box 6: Timeline Journey logs (Col-span 2) */}
+          <div className="md:col-span-2 lg:col-span-2 flex flex-col">
+            <ConsoleWindow title="[journey] - experience.log" className="h-full flex flex-col justify-between">
               <div className="grid gap-6 sm:grid-cols-2">
                 
                 {/* Work Experience */}
@@ -1041,7 +1198,7 @@ export default function ProfilePage() {
                     </div>
                     <button 
                       onClick={() => setIsAddExperienceOpen(true)}
-                      className="flex items-center gap-1 text-[9px] font-bold text-mint border border-mint/20 bg-mint/5 hover:bg-mint/10 px-2 py-1 rounded-xl cursor-pointer"
+                      className="flex items-center gap-1 text-[9px] font-bold text-mint border border-mint/20 bg-mint/5 hover:bg-mint/10 px-2.5 py-1.5 rounded-xl cursor-pointer select-none"
                     >
                       <Plus className="h-3 w-3" /> Add
                     </button>
@@ -1052,7 +1209,7 @@ export default function ProfilePage() {
                       {profile.experience.map((exp, i) => (
                         <div key={i} className="group relative bg-white/[0.01] hover:bg-white/[0.02] p-3.5 rounded-xl border border-white/[0.04] flex items-start gap-3 justify-between transition-all duration-300 hover:border-mint/30 hover:shadow-glow-xs">
                           <div className="absolute -left-[29px] top-4.5 h-3.5 w-3.5 rounded-full border border-panel bg-mint shadow-[0_0_10px_rgba(56,242,181,0.5)] group-hover:bg-accent group-hover:shadow-[0_0_15px_rgba(0,212,255,0.7)] transition-all duration-300" />
-                          <div className="min-w-0 flex-1">
+                          <div className="min-w-0 flex-1 text-left">
                             <div className="flex flex-wrap items-center justify-between gap-x-2">
                               <p className="text-xs font-bold text-white truncate max-w-[65%]">{exp.role}</p>
                               <span className="text-[8px] font-mono text-slate px-1.5 py-0.5 rounded bg-white/[0.04] border border-white/[0.04] font-semibold">{exp.duration}</span>
@@ -1084,7 +1241,7 @@ export default function ProfilePage() {
                     </div>
                     <button 
                       onClick={() => setIsAddLicenseOpen(true)}
-                      className="flex items-center gap-1 text-[9px] font-bold text-purple border border-purple/20 bg-purple/5 hover:bg-purple/10 px-2 py-1 rounded-xl cursor-pointer"
+                      className="flex items-center gap-1 text-[9px] font-bold text-purple border border-purple/20 bg-purple/5 hover:bg-purple/10 px-2.5 py-1.5 rounded-xl cursor-pointer select-none"
                     >
                       <Plus className="h-3 w-3" /> Add
                     </button>
@@ -1094,12 +1251,12 @@ export default function ProfilePage() {
                     <div className="space-y-3">
                       {profile.licenses.map((lic, i) => (
                         <div key={i} className="group relative bg-white/[0.01] hover:bg-white/[0.02] p-3.5 rounded-xl border border-white/[0.04] flex items-start gap-3 justify-between transition-all duration-300 hover:border-purple/35 hover:shadow-glow-xs">
-                          <div className="min-w-0 flex-1">
+                          <div className="min-w-0 flex-1 text-left">
                             <div className="flex items-center gap-1.5">
                               <p className="text-xs font-bold text-white truncate max-w-[75%]">{lic.name}</p>
                               <span className="text-[8px] font-bold text-purple bg-purple/10 border border-purple/20 px-1 py-0.5 rounded shadow-glow-xs shrink-0">✓ Verified</span>
                             </div>
-                            <p className="text-[11px] text-purple font-bold mt-1 truncate">{lic.issuer}</p>
+                            <p className="text-[11px] text-purple font-bold mt-1.5 truncate">{lic.issuer}</p>
                             {lic.issueDate && <p className="text-[8px] text-slate mt-0.5 font-semibold">Issued: {lic.issueDate}</p>}
                             
                             {lic.credentialUrl && (
@@ -1109,7 +1266,7 @@ export default function ProfilePage() {
                                 rel="noreferrer" 
                                 className="inline-flex items-center gap-1 text-[8px] text-slate hover:text-white mt-1.5 font-bold transition-colors"
                               >
-                                <ExternalLink className="h-2.5 w-2.5" /> Source Link
+                                <ExternalLink className="h-2.5 w-2.5" /> Source URL
                               </a>
                             )}
                           </div>
@@ -1128,20 +1285,19 @@ export default function ProfilePage() {
                 </div>
 
               </div>
-            </GlassCard>
+            </ConsoleWindow>
           </div>
 
-          {/* 7. Skills & Tags Cloud (Col-span 1) */}
-          <div className="md:col-span-1 lg:col-span-1 space-y-6 h-full">
-            <GlassCard className="rounded-3xl border border-white/[0.08] shadow-2xl p-5 space-y-4 text-left h-full flex flex-col justify-between">
-              
+          {/* Bento Box 7: Skills Directory tags cloud (Col-span 1) */}
+          <div className="md:col-span-1 lg:col-span-1 flex flex-col">
+            <ConsoleWindow title="[cfg] - skills.xml" className="h-full flex flex-col justify-between">
               <div className="space-y-4">
                 <h3 className="font-heading text-base font-bold flex items-center gap-2 text-white">
-                  <Cpu className="h-5 w-5 text-blaze" /> Skills & Tags
+                  <Cpu className="h-5 w-5 text-blaze" /> Skills config
                 </h3>
-                <p className="text-[10px] text-slate font-semibold">// Developer core technical stack</p>
+                <p className="text-[10px] text-slate font-semibold">// Technical inventory list data</p>
 
-                <div className="space-y-3">
+                <div className="space-y-3 text-left">
                   {(Object.keys(groupedSkills) as Array<keyof typeof groupedSkills>).map((category) => {
                     const skillsList = groupedSkills[category];
                     if (!skillsList || skillsList.length === 0) return null;
@@ -1159,13 +1315,13 @@ export default function ProfilePage() {
                     );
                   })}
                   {userSkills.length === 0 && (
-                    <div className="text-center py-6 text-xs text-slate italic font-semibold border border-dashed border-white/10 rounded-2xl bg-white/[0.01]">No core skills listed yet.</div>
+                    <div className="text-center py-6 text-xs text-slate italic font-semibold border border-dashed border-white/10 rounded-2xl bg-white/[0.01]">No core skills config detected.</div>
                   )}
                 </div>
               </div>
 
-              {/* Interests hashtags list */}
-              <div className="mt-5 border-t border-white/[0.06] pt-4">
+              {/* Interests hashtags */}
+              <div className="mt-5 border-t border-white/[0.06] pt-4 text-left">
                 <p className="text-[9px] font-mono text-slate/50 uppercase tracking-widest font-bold mb-2">// Hobbies & Interests</p>
                 <div className="flex flex-wrap gap-1.5">
                   {profile?.interests && profile.interests.length > 0 ? (
@@ -1175,27 +1331,26 @@ export default function ProfilePage() {
                       </span>
                     ))
                   ) : (
-                    <p className="text-[10px] text-slate italic font-semibold">No interests listed yet.</p>
+                    <p className="text-[10px] text-slate italic font-semibold">No config items found.</p>
                   )}
                 </div>
               </div>
-
-            </GlassCard>
+            </ConsoleWindow>
           </div>
 
         </div>
 
-        {/* NFT achievements Collection Section */}
-        <GlassCard className="rounded-3xl border border-white/[0.08] shadow-2xl p-5 text-left">
+        {/* NFT achievements collection dashboard */}
+        <ConsoleWindow title="[bash] - unlockables.sh" className="w-full text-left rounded-3xl">
           <h3 className="font-heading text-base font-bold flex items-center gap-2 text-purple mb-4">
-            <Trophy className="h-5 w-5 text-purple" /> NFT achievements Collection
+            <Trophy className="h-5 w-5 text-purple" /> Unlocked achievements
           </h3>
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-6">
             {achievements.map((ach, i) => (
               <div
                 key={i}
                 className={cn(
-                  "group relative rounded-2xl border bg-gradient-to-b from-white/[0.01] to-white/[0.02] p-3 text-center transition-all duration-300 hover:-translate-y-1 hover:bg-white/[0.03] shadow-md",
+                  "group relative rounded-2xl border bg-gradient-to-b from-white/[0.01] to-white/[0.02] p-3.5 text-center transition-all duration-300 hover:-translate-y-1 hover:bg-white/[0.03] shadow-md",
                   ach.rarity === "Legendary" && "border-blaze/25 hover:border-blaze hover:shadow-[0_0_20px_rgba(255,122,24,0.15)]",
                   ach.rarity === "Epic" && "border-purple/25 hover:border-purple hover:shadow-[0_0_20px_rgba(139,92,246,0.15)]",
                   ach.rarity === "Rare" && "border-cyan/25 hover:border-cyan hover:shadow-[0_0_20px_rgba(34,211,238,0.15)]",
@@ -1212,7 +1367,7 @@ export default function ProfilePage() {
               </div>
             ))}
           </div>
-        </GlassCard>
+        </ConsoleWindow>
 
       </motion.div>
 
