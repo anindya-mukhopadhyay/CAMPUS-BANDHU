@@ -4,14 +4,13 @@ import { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import {
   MapPin, Mail, Calendar, BookOpen, Award, Briefcase, Trophy, Cpu,
-  Edit3, Github, Linkedin, ExternalLink, Camera, Upload, X, Plus, Trash2, Code2, Folder, Sparkles
+  Edit3, Github, Linkedin, ExternalLink, Camera, X, Plus, Trash2, Code2, Folder, Sparkles
 } from "lucide-react";
 
 import { AppShell } from "@/components/layout/AppShell";
 import { NeonBadge } from "@/components/ui/neon-badge";
 import { Avatar } from "@/components/ui/avatar";
 import { Modal } from "@/components/ui/modal";
-import { Input } from "@/components/ui/input";
 import { useAuthStore, ROLE_LABELS, ROLE_COLORS } from "@/lib/stores/useAuthStore";
 import { cn } from "@/lib/utils/cn";
 
@@ -92,16 +91,11 @@ export default function ProfilePage() {
 
   // Projects Modal
   const [isAddProjectOpen, setIsAddProjectOpen] = useState(false);
-  const [newProject, setNewProject] = useState({
-    title: "",
-    description: "",
-    photoUrl: "",
-    youtubeLink: "",
-    githubLink: ""
-  });
+  const [projEditingIndex, setProjEditingIndex] = useState<number | null>(null);
 
   // Experience CLI Wizard Modal State
   const [isAddExperienceOpen, setIsAddExperienceOpen] = useState(false);
+  const [expEditingIndex, setExpEditingIndex] = useState<number | null>(null);
   const [expWizardStep, setExpWizardStep] = useState(0);
   const [expWizardData, setExpWizardData] = useState({
     role: "",
@@ -116,21 +110,23 @@ export default function ProfilePage() {
 
   useEffect(() => {
     if (isAddExperienceOpen) {
-      setExpWizardStep(0);
-      setExpWizardData({ role: "", company: "", duration: "", description: "" });
-      setExpWizardInput("");
-      setExpWizardLines([
-        "Initializing experience logging wizard...",
-        "[sys.log]: Ready to append employment history.",
-        "",
-        "Enter job / internship role (e.g. Fullstack Engineer Intern):"
-      ]);
+      if (expEditingIndex === null) {
+        setExpWizardStep(0);
+        setExpWizardData({ role: "", company: "", duration: "", description: "" });
+        setExpWizardInput("");
+        setExpWizardLines([
+          "Initializing experience logging wizard...",
+          "[sys.log]: Ready to append employment history.",
+          "",
+          "Enter job / internship role (e.g. Fullstack Engineer Intern):"
+        ]);
+      }
       setTimeout(() => {
         expWizardInputRef.current?.focus();
         expWizardEndRef.current?.scrollIntoView({ behavior: "smooth" });
       }, 100);
     }
-  }, [isAddExperienceOpen]);
+  }, [isAddExperienceOpen, expEditingIndex]);
 
   useEffect(() => {
     if (isAddExperienceOpen) {
@@ -139,14 +135,161 @@ export default function ProfilePage() {
     }
   }, [expWizardLines, expWizardStep, isAddExperienceOpen]);
 
-  // License Modal
+  // License CLI Wizard Modal State
   const [isAddLicenseOpen, setIsAddLicenseOpen] = useState(false);
-  const [newLicense, setNewLicense] = useState({
+  const [licEditingIndex, setLicEditingIndex] = useState<number | null>(null);
+  const [licWizardStep, setLicWizardStep] = useState(0);
+  const [licWizardData, setLicWizardData] = useState({
     name: "",
     issuer: "",
     issueDate: "",
     credentialUrl: ""
   });
+  const [licWizardInput, setLicWizardInput] = useState("");
+  const [licWizardLines, setLicWizardLines] = useState<string[]>([]);
+  const licWizardInputRef = useRef<HTMLInputElement>(null);
+  const licWizardEndRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (isAddLicenseOpen) {
+      if (licEditingIndex === null) {
+        setLicWizardStep(0);
+        setLicWizardData({ name: "", issuer: "", issueDate: "", credentialUrl: "" });
+        setLicWizardInput("");
+        setLicWizardLines([
+          "Initializing certification logging wizard...",
+          "[sys.log]: Ready to append license credentials.",
+          "",
+          "Enter certification name (e.g. AWS Solutions Architect):"
+        ]);
+      }
+      setTimeout(() => {
+        licWizardInputRef.current?.focus();
+        licWizardEndRef.current?.scrollIntoView({ behavior: "smooth" });
+      }, 100);
+    }
+  }, [isAddLicenseOpen, licEditingIndex]);
+
+  useEffect(() => {
+    if (isAddLicenseOpen) {
+      licWizardEndRef.current?.scrollIntoView({ behavior: "smooth" });
+      licWizardInputRef.current?.focus();
+    }
+  }, [licWizardLines, licWizardStep, isAddLicenseOpen]);
+
+  // Project CLI Wizard Modal State
+  const [projWizardStep, setProjWizardStep] = useState(0);
+  const [projWizardData, setProjWizardData] = useState({
+    title: "",
+    description: "",
+    photoUrl: "",
+    githubLink: "",
+    youtubeLink: ""
+  });
+  const [projWizardInput, setProjWizardInput] = useState("");
+  const [projWizardLines, setProjWizardLines] = useState<string[]>([]);
+  const projWizardInputRef = useRef<HTMLInputElement>(null);
+  const projWizardEndRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (isAddProjectOpen) {
+      if (projEditingIndex === null) {
+        setProjWizardStep(0);
+        setProjWizardData({ title: "", description: "", photoUrl: "", githubLink: "", youtubeLink: "" });
+        setProjWizardInput("");
+        setProjWizardLines([
+          "Initializing creation showcase deployment wizard...",
+          "[sys.log]: Ready to deploy project metadata.",
+          "",
+          "Enter project title (e.g. Campus Bandhu App):"
+        ]);
+      }
+      setTimeout(() => {
+        projWizardInputRef.current?.focus();
+        projWizardEndRef.current?.scrollIntoView({ behavior: "smooth" });
+      }, 100);
+    }
+  }, [isAddProjectOpen, projEditingIndex]);
+
+  useEffect(() => {
+    if (isAddProjectOpen) {
+      projWizardEndRef.current?.scrollIntoView({ behavior: "smooth" });
+      projWizardInputRef.current?.focus();
+    }
+  }, [projWizardLines, projWizardStep, isAddProjectOpen]);
+
+  // Edit Profile CLI Wizard Modal State
+  const [editWizardStep, setEditWizardStep] = useState(0);
+  const [editWizardData, setEditWizardData] = useState({
+    fullName: "",
+    email: "",
+    department: "",
+    graduationYear: 2025,
+    bio: "",
+    githubUrl: "",
+    linkedinUrl: "",
+    leetcodeUrl: "",
+    orcidUrl: "",
+    resumeUrl: "",
+    skills: [] as string[],
+    interests: "",
+    collegeName: "",
+    avatarUrl: "",
+    coverPhotoUrl: "",
+    avatarZoom: 1,
+    avatarX: 0,
+    avatarY: 0,
+    coverZoom: 1,
+    coverX: 0,
+    coverY: 0,
+    gender: "Undeclared"
+  });
+  const [editWizardInput, setEditWizardInput] = useState("");
+  const [editWizardLines, setEditWizardLines] = useState<string[]>([]);
+  const editWizardInputRef = useRef<HTMLInputElement>(null);
+  const editWizardEndRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (isEditing) {
+      setEditWizardStep(0);
+      setEditWizardInput("");
+      setEditWizardLines([
+        "Initializing profile configuration editor...",
+        "[sys.log]: Loaded existing database parameters.",
+        "// Press Enter directly to preserve current values.",
+        "",
+        `Enter Full Name (Current: "${editWizardData.fullName || "User"}"):`
+      ]);
+      setTimeout(() => {
+        editWizardInputRef.current?.focus();
+        editWizardEndRef.current?.scrollIntoView({ behavior: "smooth" });
+      }, 100);
+    }
+  }, [isEditing]);
+
+  useEffect(() => {
+    if (isEditing) {
+      editWizardEndRef.current?.scrollIntoView({ behavior: "smooth" });
+      editWizardInputRef.current?.focus();
+    }
+  }, [editWizardLines, editWizardStep, isEditing]);
+
+  const toggleWizardSkill = (skill: string) => {
+    const isSelected = editWizardData.skills.includes(skill);
+    if (isSelected) {
+      setEditWizardData(prev => ({
+        ...prev,
+        skills: prev.skills.filter(s => s !== skill)
+      }));
+    } else {
+      if (editWizardData.skills.length < 5) {
+        setEditWizardData(prev => ({
+          ...prev,
+          skills: [...prev.skills, skill]
+        }));
+      }
+    }
+  };
 
   // Sync repositioning
   useEffect(() => {
@@ -240,77 +383,368 @@ export default function ProfilePage() {
     }
   };
 
-  const [editData, setEditData] = useState({
-    fullName: "",
-    email: "",
-    department: "",
-    graduationYear: 2025,
-    bio: "",
-    githubUrl: "",
-    linkedinUrl: "",
-    leetcodeUrl: "",
-    orcidUrl: "",
-    resumeUrl: "",
-    skills: [] as string[],
-    interests: "",
-    collegeName: "",
-    avatarUrl: "",
-    coverPhotoUrl: "",
-    avatarZoom: 1,
-    avatarX: 0,
-    avatarY: 0,
-    coverZoom: 1,
-    coverX: 0,
-    coverY: 0,
-    gender: "Undeclared"
-  });
+  const handleEditWizardSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const val = editWizardInput.trim();
+    const newLines = [...editWizardLines, `> ${editWizardInput}`];
 
-  const handleSave = async () => {
-    if (editData.skills.length < 1) {
-      alert("Please select at least 1 skill!");
-      return;
+    if (editWizardStep === 0) {
+      const finalVal = val || editWizardData.fullName || "User";
+      setEditWizardData(prev => ({ ...prev, fullName: finalVal }));
+      setEditWizardLines([
+        ...newLines,
+        `✓ Full Name: "${finalVal}"`,
+        "",
+        `Enter Department / Course (Current: "${editWizardData.department || "Undeclared"}"):`
+      ]);
+      setEditWizardStep(1);
+      setEditWizardInput("");
+    } else if (editWizardStep === 1) {
+      const finalVal = val || editWizardData.department || "Undeclared";
+      setEditWizardData(prev => ({ ...prev, department: finalVal }));
+      setEditWizardLines([
+        ...newLines,
+        `✓ Department: "${finalVal}"`,
+        "",
+        `Enter Graduation Year (Current: "${editWizardData.graduationYear || 2025}"):`
+      ]);
+      setEditWizardStep(2);
+      setEditWizardInput("");
+    } else if (editWizardStep === 2) {
+      const finalVal = val ? (Number(val) || 2025) : editWizardData.graduationYear;
+      setEditWizardData(prev => ({ ...prev, graduationYear: finalVal }));
+      setEditWizardLines([
+        ...newLines,
+        `✓ Graduation Year: "${finalVal}"`,
+        "",
+        `Enter Email Address (Current: "${editWizardData.email || "None"}"):`
+      ]);
+      setEditWizardStep(3);
+      setEditWizardInput("");
+    } else if (editWizardStep === 3) {
+      const finalVal = val || editWizardData.email || "";
+      setEditWizardData(prev => ({ ...prev, email: finalVal }));
+      setEditWizardLines([
+        ...newLines,
+        `✓ Email Address: "${finalVal || "None"}"`,
+        "",
+        `Enter Gender [Male/Female/Other/Undeclared] (Current: "${editWizardData.gender || "Undeclared"}"):`
+      ]);
+      setEditWizardStep(4);
+      setEditWizardInput("");
+    } else if (editWizardStep === 4) {
+      let finalVal = val || editWizardData.gender;
+      if (val) {
+        const lowerVal = val.toLowerCase();
+        if (lowerVal.startsWith("m")) finalVal = "Male";
+        else if (lowerVal.startsWith("f")) finalVal = "Female";
+        else if (lowerVal.startsWith("o")) finalVal = "Other";
+        else finalVal = "Undeclared";
+      }
+      setEditWizardData(prev => ({ ...prev, gender: finalVal }));
+      setEditWizardLines([
+        ...newLines,
+        `✓ Gender: "${finalVal}"`,
+        "",
+        `Enter College / University Name (Current: "${editWizardData.collegeName || "NSUT, New Delhi"}"):`
+      ]);
+      setEditWizardStep(5);
+      setEditWizardInput("");
+    } else if (editWizardStep === 5) {
+      const finalVal = val || editWizardData.collegeName || "NSUT, New Delhi";
+      setEditWizardData(prev => ({ ...prev, collegeName: finalVal }));
+      setEditWizardLines([
+        ...newLines,
+        `✓ College: "${finalVal}"`,
+        "",
+        `Enter Resume / File Link (Current: "${editWizardData.resumeUrl || "None"}"):`
+      ]);
+      setEditWizardStep(6);
+      setEditWizardInput("");
+    } else if (editWizardStep === 6) {
+      const finalVal = val || editWizardData.resumeUrl || "";
+      setEditWizardData(prev => ({ ...prev, resumeUrl: finalVal }));
+      setEditWizardLines([
+        ...newLines,
+        `✓ Resume URL: "${finalVal || "None"}"`,
+        "",
+        `Enter GitHub Profile URL (Current: "${editWizardData.githubUrl || "None"}"):`
+      ]);
+      setEditWizardStep(7);
+      setEditWizardInput("");
+    } else if (editWizardStep === 7) {
+      const finalVal = val || editWizardData.githubUrl || "";
+      setEditWizardData(prev => ({ ...prev, githubUrl: finalVal }));
+      setEditWizardLines([
+        ...newLines,
+        `✓ GitHub URL: "${finalVal || "None"}"`,
+        "",
+        `Enter LinkedIn Profile URL (Current: "${editWizardData.linkedinUrl || "None"}"):`
+      ]);
+      setEditWizardStep(8);
+      setEditWizardInput("");
+    } else if (editWizardStep === 8) {
+      const finalVal = val || editWizardData.linkedinUrl || "";
+      setEditWizardData(prev => ({ ...prev, linkedinUrl: finalVal }));
+      setEditWizardLines([
+        ...newLines,
+        `✓ LinkedIn URL: "${finalVal || "None"}"`,
+        "",
+        `Enter LeetCode Profile URL (Current: "${editWizardData.leetcodeUrl || "None"}"):`
+      ]);
+      setEditWizardStep(9);
+      setEditWizardInput("");
+    } else if (editWizardStep === 9) {
+      const finalVal = val || editWizardData.leetcodeUrl || "";
+      setEditWizardData(prev => ({ ...prev, leetcodeUrl: finalVal }));
+      setEditWizardLines([
+        ...newLines,
+        `✓ LeetCode URL: "${finalVal || "None"}"`,
+        "",
+        `Enter ORCID iD Link (Current: "${editWizardData.orcidUrl || "None"}"):`
+      ]);
+      setEditWizardStep(10);
+      setEditWizardInput("");
+    } else if (editWizardStep === 10) {
+      const finalVal = val || editWizardData.orcidUrl || "";
+      setEditWizardData(prev => ({ ...prev, orcidUrl: finalVal }));
+      setEditWizardLines([
+        ...newLines,
+        `✓ ORCID URL: "${finalVal || "None"}"`,
+        "",
+        `Enter Bio / Summary (Current: "${editWizardData.bio || "None"}"):`
+      ]);
+      setEditWizardStep(11);
+      setEditWizardInput("");
+    } else if (editWizardStep === 11) {
+      const finalVal = val || editWizardData.bio || "";
+      setEditWizardData(prev => ({ ...prev, bio: finalVal }));
+      setEditWizardLines([
+        ...newLines,
+        `✓ Bio: "${finalVal.substring(0, 40)}${finalVal.length > 40 ? "..." : ""}"`,
+        "",
+        `Enter Interests (comma separated, Current: "${editWizardData.interests || "None"}"):`
+      ]);
+      setEditWizardStep(12);
+      setEditWizardInput("");
+    } else if (editWizardStep === 12) {
+      const finalVal = val || editWizardData.interests || "";
+      const finalInterestsArray = finalVal ? finalVal.split(",").map(i => i.trim()).filter(Boolean) : [];
+      setEditWizardData(prev => ({ ...prev, interests: finalVal }));
+      setEditWizardLines([
+        ...newLines,
+        `✓ Interests: "${finalVal || "None"}"`,
+        "",
+        "═════ CONFIRM PARAMETER CONFIGS ═════",
+        `  Name:        ${editWizardData.fullName}`,
+        `  Dept:        ${editWizardData.department}`,
+        `  Grad Year:   ${editWizardData.graduationYear}`,
+        `  Email:       ${editWizardData.email || "None"}`,
+        `  Gender:      ${editWizardData.gender}`,
+        `  College:     ${editWizardData.collegeName}`,
+        `  Resume:      ${editWizardData.resumeUrl || "None"}`,
+        `  GitHub:      ${editWizardData.githubUrl || "None"}`,
+        `  LinkedIn:    ${editWizardData.linkedinUrl || "None"}`,
+        `  LeetCode:    ${editWizardData.leetcodeUrl || "None"}`,
+        `  ORCID:       ${editWizardData.orcidUrl || "None"}`,
+        `  Bio:         ${editWizardData.bio || "None"}`,
+        `  Interests:   ${finalInterestsArray.join(", ") || "None"}`,
+        `  Skills:      ${editWizardData.skills.join(", ") || "None"}`,
+        "═════════════════════════════════════",
+        "Save configurations to database? [y/n] (Default: y):"
+      ]);
+      setEditWizardStep(13);
+      setEditWizardInput("");
+    } else if (editWizardStep === 13) {
+      const confirmVal = val.toLowerCase();
+      if (confirmVal === "n") {
+        setEditWizardLines([
+          ...newLines,
+          "❌ Configuration update aborted.",
+          "Closing editor..."
+        ]);
+        setTimeout(() => {
+          setIsEditing(false);
+        }, 1200);
+      } else {
+        setEditWizardLines([
+          ...newLines,
+          "⌛ Writing parameters to MongoDB server instance...",
+        ]);
+        try {
+          const finalInterestsArray = editWizardData.interests ? editWizardData.interests.split(",").map(i => i.trim()).filter(Boolean) : [];
+          await updateProfile({
+            fullName: editWizardData.fullName,
+            department: editWizardData.department,
+            graduationYear: editWizardData.graduationYear,
+            email: editWizardData.email,
+            gender: editWizardData.gender,
+            collegeName: editWizardData.collegeName,
+            resumeUrl: editWizardData.resumeUrl,
+            githubUrl: editWizardData.githubUrl,
+            linkedinUrl: editWizardData.linkedinUrl,
+            leetcodeUrl: editWizardData.leetcodeUrl,
+            orcidUrl: editWizardData.orcidUrl,
+            bio: editWizardData.bio,
+            interests: finalInterestsArray,
+            skills: editWizardData.skills
+          });
+          setEditWizardLines(prev => [
+            ...prev,
+            "✓ Parameters written successfully!",
+            "Closing configuration editor..."
+          ]);
+          setTimeout(() => {
+            setIsEditing(false);
+          }, 1200);
+        } catch (err) {
+          setEditWizardLines(prev => [
+            ...prev,
+            "❌ Database write failure. Configuration rolled back."
+          ]);
+        }
+      }
+      setEditWizardStep(14);
+      setEditWizardInput("");
     }
-    if (editData.skills.length > 5) {
-      alert("Please select at most 5 skills!");
-      return;
-    }
-    setIsEditing(false);
-    await updateProfile({
-      fullName: editData.fullName,
-      email: editData.email,
-      department: editData.department,
-      graduationYear: Number(editData.graduationYear) || 2025,
-      bio: editData.bio,
-      githubUrl: editData.githubUrl,
-      linkedinUrl: editData.linkedinUrl,
-      leetcodeUrl: editData.leetcodeUrl,
-      orcidUrl: editData.orcidUrl,
-      resumeUrl: editData.resumeUrl,
-      collegeName: editData.collegeName,
-      avatarUrl: editData.avatarUrl,
-      coverPhotoUrl: editData.coverPhotoUrl,
-      avatarZoom: editData.avatarZoom,
-      avatarX: editData.avatarX,
-      avatarY: editData.avatarY,
-      coverZoom: editData.coverZoom,
-      coverX: editData.coverX,
-      coverY: editData.coverY,
-      gender: editData.gender,
-      skills: editData.skills,
-      interests: editData.interests.split(",").map(i => i.trim()).filter(Boolean)
-    });
   };
 
-  const handleAddProject = async (e: React.FormEvent) => {
+  const handleProjWizardSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newProject.title || !newProject.description) {
-      alert("Title and Description are required!");
+    const val = projWizardInput.trim();
+    if (projEditingIndex === null && projWizardStep < 2 && val === "") {
       return;
     }
-    const currentProjects = profile?.projects || [];
-    await updateProfile({ projects: [...currentProjects, newProject] });
-    setIsAddProjectOpen(false);
-    setNewProject({ title: "", description: "", photoUrl: "", youtubeLink: "", githubLink: "" });
+
+    const newLines = [...projWizardLines, `> ${projWizardInput}`];
+
+    if (projWizardStep === 0) {
+      const finalTitle = val || projWizardData.title;
+      if (!finalTitle) return;
+      setProjWizardData(prev => ({ ...prev, title: finalTitle }));
+      const descStr = projWizardData.description ? ` (Current: "${projWizardData.description.substring(0, 30)}${projWizardData.description.length > 30 ? "..." : ""}")` : " (what your project does)";
+      setProjWizardLines([
+        ...newLines,
+        `✓ Title set: "${finalTitle}"`,
+        "",
+        "Enter project description" + descStr + ":"
+      ]);
+      setProjWizardStep(1);
+      setProjWizardInput("");
+    } else if (projWizardStep === 1) {
+      const finalDesc = val || projWizardData.description;
+      if (!finalDesc) return;
+      setProjWizardData(prev => ({ ...prev, description: finalDesc }));
+      const imgStr = projWizardData.photoUrl ? ` (Current: "${projWizardData.photoUrl}")` : ' (Optional - or "skip" to omit)';
+      setProjWizardLines([
+        ...newLines,
+        `✓ Description set: "${finalDesc.substring(0, 40)}${finalDesc.length > 40 ? "..." : ""}"`,
+        "",
+        "Enter direct image / banner URL" + imgStr + ":"
+      ]);
+      setProjWizardStep(2);
+      setProjWizardInput("");
+    } else if (projWizardStep === 2) {
+      let finalImg = val;
+      if (val.toLowerCase() === "skip") {
+        finalImg = "";
+      } else if (val === "") {
+        finalImg = projWizardData.photoUrl;
+      }
+      setProjWizardData(prev => ({ ...prev, photoUrl: finalImg }));
+      const gitStr = projWizardData.githubLink ? ` (Current: "${projWizardData.githubLink}")` : ' (Optional - or "skip" to omit)';
+      setProjWizardLines([
+        ...newLines,
+        `✓ Image URL set: "${finalImg || "None"}"`,
+        "",
+        "Enter GitHub Repository URL" + gitStr + ":"
+      ]);
+      setProjWizardStep(3);
+      setProjWizardInput("");
+    } else if (projWizardStep === 3) {
+      let finalGit = val;
+      if (val.toLowerCase() === "skip") {
+        finalGit = "";
+      } else if (val === "") {
+        finalGit = projWizardData.githubLink;
+      }
+      setProjWizardData(prev => ({ ...prev, githubLink: finalGit }));
+      const ytStr = projWizardData.youtubeLink ? ` (Current: "${projWizardData.youtubeLink}")` : ' (Optional - or "skip" to omit)';
+      setProjWizardLines([
+        ...newLines,
+        `✓ Repo URL set: "${finalGit || "None"}"`,
+        "",
+        "Enter YouTube Demo URL" + ytStr + ":"
+      ]);
+      setProjWizardStep(4);
+      setProjWizardInput("");
+    } else if (projWizardStep === 4) {
+      let finalYt = val;
+      if (val.toLowerCase() === "skip") {
+        finalYt = "";
+      } else if (val === "") {
+        finalYt = projWizardData.youtubeLink;
+      }
+      const finalData = { ...projWizardData, youtubeLink: finalYt };
+      setProjWizardData(finalData);
+      setProjWizardLines([
+        ...newLines,
+        `✓ Video URL set: "${finalYt || "None"}"`,
+        "",
+        projEditingIndex !== null ? "═════ CONFIRM DEPLOYMENT EDIT ═════" : "═════ CONFIRM DEPLOYMENT ENTRY ═════",
+        `  Title:       ${finalData.title}`,
+        `  Description: ${finalData.description.substring(0, 50)}${finalData.description.length > 50 ? "..." : ""}`,
+        `  Image URL:   ${finalData.photoUrl || "None (Auto-generates custom block gradient)"}`,
+        `  GitHub Link: ${finalData.githubLink || "None"}`,
+        `  YouTube Link: ${finalData.youtubeLink || "None"}`,
+        "════════════════════════════════════",
+        projEditingIndex !== null ? "Execute update operation? [y/n] (Default: y):" : "Execute deploy operation? [y/n] (Default: y):"
+      ]);
+      setProjWizardStep(5);
+      setProjWizardInput("");
+    } else if (projWizardStep === 5) {
+      const confirmVal = val.toLowerCase();
+      if (confirmVal === "n") {
+        setProjWizardLines([
+          ...newLines,
+          "❌ Operation aborted.",
+          "Closing console session..."
+        ]);
+        setTimeout(() => {
+          setIsAddProjectOpen(false);
+        }, 1200);
+      } else {
+        setProjWizardLines([
+          ...newLines,
+          "⌛ Committing project metadata to server database...",
+        ]);
+        try {
+          const currentProj = profile?.projects || [];
+          let updated = [...currentProj];
+          if (projEditingIndex !== null) {
+            updated[projEditingIndex] = projWizardData;
+          } else {
+            updated.push(projWizardData);
+          }
+          await updateProfile({ projects: updated });
+          setProjWizardLines(prev => [
+            ...prev,
+            projEditingIndex !== null ? "✓ Showcase project successfully updated!" : "✓ Showcase project successfully deployed!",
+            "Closing wizard console..."
+          ]);
+          setTimeout(() => {
+            setIsAddProjectOpen(false);
+          }, 1200);
+        } catch (err) {
+          setProjWizardLines(prev => [
+            ...prev,
+            "❌ Database write failure. Transaction rolled back."
+          ]);
+        }
+      }
+      setProjWizardStep(6);
+      setProjWizardInput("");
+    }
   };
 
   const handleDeleteProject = async (index: number) => {
@@ -324,57 +758,71 @@ export default function ProfilePage() {
   const handleExpWizardSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const val = expWizardInput.trim();
-    if (expWizardStep < 4 && val === "" && expWizardStep !== 3) {
+    if (expEditingIndex === null && expWizardStep < 3 && val === "") {
       return;
     }
 
     const newLines = [...expWizardLines, `> ${expWizardInput}`];
 
     if (expWizardStep === 0) {
-      setExpWizardData(prev => ({ ...prev, role: val }));
+      const finalRole = val || expWizardData.role;
+      if (!finalRole) return;
+      setExpWizardData(prev => ({ ...prev, role: finalRole }));
+      const compStr = expWizardData.company ? ` (Current: "${expWizardData.company}")` : " (e.g. Google DeepMind)";
       setExpWizardLines([
         ...newLines,
-        `✓ Role set: "${val}"`,
+        `✓ Role set: "${finalRole}"`,
         "",
-        "Enter company / club name (e.g. Google DeepMind):"
+        "Enter company / club name" + compStr + ":"
       ]);
       setExpWizardStep(1);
       setExpWizardInput("");
     } else if (expWizardStep === 1) {
-      setExpWizardData(prev => ({ ...prev, company: val }));
+      const finalCompany = val || expWizardData.company;
+      if (!finalCompany) return;
+      setExpWizardData(prev => ({ ...prev, company: finalCompany }));
+      const durStr = expWizardData.duration ? ` (Current: "${expWizardData.duration}")` : " (e.g. Jun 2023 - Present or Summer 2024)";
       setExpWizardLines([
         ...newLines,
-        `✓ Company set: "${val}"`,
+        `✓ Company set: "${finalCompany}"`,
         "",
-        "Enter duration (e.g. Jun 2023 - Present or Summer 2024):"
+        "Enter duration" + durStr + ":"
       ]);
       setExpWizardStep(2);
       setExpWizardInput("");
     } else if (expWizardStep === 2) {
-      setExpWizardData(prev => ({ ...prev, duration: val }));
+      const finalDuration = val || expWizardData.duration;
+      if (!finalDuration) return;
+      setExpWizardData(prev => ({ ...prev, duration: finalDuration }));
+      const descStr = expWizardData.description ? ` (Current: "${expWizardData.description}")` : ' (Optional - type accomplishments, or "skip" to omit)';
       setExpWizardLines([
         ...newLines,
-        `✓ Duration set: "${val}"`,
+        `✓ Duration set: "${finalDuration}"`,
         "",
-        'Enter description (Optional - type accomplishments, or "skip" to omit):'
+        "Enter description" + descStr + ":"
       ]);
       setExpWizardStep(3);
       setExpWizardInput("");
     } else if (expWizardStep === 3) {
-      const descVal = val.toLowerCase() === "skip" ? "" : val;
-      const finalData = { ...expWizardData, description: descVal };
+      let finalDesc = val;
+      if (val.toLowerCase() === "skip") {
+        finalDesc = "";
+      } else if (val === "") {
+        finalDesc = expWizardData.description;
+      }
+      const finalData = { ...expWizardData, description: finalDesc };
       setExpWizardData(finalData);
       setExpWizardLines([
         ...newLines,
-        `✓ Description set: "${descVal || "None"}"`,
+        `✓ Description set: "${finalDesc || "None"}"`,
         "",
-        "═════ CONFIRM EXPERIENCE ENTRY ═════",
+        expEditingIndex !== null ? "═════ CONFIRM EXPERIENCE EDIT ═════" : "═════ CONFIRM EXPERIENCE ENTRY ═════",
         `  Role:        ${finalData.role}`,
         `  Company:     ${finalData.company}`,
         `  Duration:    ${finalData.duration}`,
         `  Description: ${finalData.description || "Undeclared"}`,
         "════════════════════════════════════",
-        "Execute append operation? [y/n] (Default: y):"
+        expEditingIndex !== null ? "Execute update operation? [y/n] (Default: y):" : "Execute append operation? [y/n] (Default: y):"
       ]);
       setExpWizardStep(4);
       setExpWizardInput("");
@@ -396,10 +844,16 @@ export default function ProfilePage() {
         ]);
         try {
           const currentExp = profile?.experience || [];
-          await updateProfile({ experience: [...currentExp, expWizardData] });
+          let updated = [...currentExp];
+          if (expEditingIndex !== null) {
+            updated[expEditingIndex] = expWizardData;
+          } else {
+            updated.push(expWizardData);
+          }
+          await updateProfile({ experience: updated });
           setExpWizardLines(prev => [
             ...prev,
-            "✓ Entry successfully appended!",
+            expEditingIndex !== null ? "✓ Entry successfully updated!" : "✓ Entry successfully appended!",
             "Closing wizard console..."
           ]);
           setTimeout(() => {
@@ -425,16 +879,124 @@ export default function ProfilePage() {
     }
   };
 
-  const handleAddLicense = async (e: React.FormEvent) => {
+  const handleLicWizardSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newLicense.name || !newLicense.issuer) {
-      alert("Credential Name and Issuing Authority are required!");
+    const val = licWizardInput.trim();
+    if (licEditingIndex === null && licWizardStep < 2 && val === "") {
       return;
     }
-    const currentLicenses = profile?.licenses || [];
-    await updateProfile({ licenses: [...currentLicenses, newLicense] });
-    setIsAddLicenseOpen(false);
-    setNewLicense({ name: "", issuer: "", issueDate: "", credentialUrl: "" });
+
+    const newLines = [...licWizardLines, `> ${licWizardInput}`];
+
+    if (licWizardStep === 0) {
+      const finalName = val || licWizardData.name;
+      if (!finalName) return;
+      setLicWizardData(prev => ({ ...prev, name: finalName }));
+      const issuerStr = licWizardData.issuer ? ` (Current: "${licWizardData.issuer}")` : " (e.g. Amazon Web Services)";
+      setLicWizardLines([
+        ...newLines,
+        `✓ Name set: "${finalName}"`,
+        "",
+        "Enter issuing authority" + issuerStr + ":"
+      ]);
+      setLicWizardStep(1);
+      setLicWizardInput("");
+    } else if (licWizardStep === 1) {
+      const finalIssuer = val || licWizardData.issuer;
+      if (!finalIssuer) return;
+      setLicWizardData(prev => ({ ...prev, issuer: finalIssuer }));
+      const dateStr = licWizardData.issueDate ? ` (Current: "${licWizardData.issueDate}")` : ' (Optional - e.g. September 2024, or "skip" to omit)';
+      setLicWizardLines([
+        ...newLines,
+        `✓ Issuer set: "${finalIssuer}"`,
+        "",
+        "Enter issue date" + dateStr + ":"
+      ]);
+      setLicWizardStep(2);
+      setLicWizardInput("");
+    } else if (licWizardStep === 2) {
+      let finalDate = val;
+      if (val.toLowerCase() === "skip") {
+        finalDate = "";
+      } else if (val === "") {
+        finalDate = licWizardData.issueDate;
+      }
+      setLicWizardData(prev => ({ ...prev, issueDate: finalDate }));
+      const urlStr = licWizardData.credentialUrl ? ` (Current: "${licWizardData.credentialUrl}")` : ' (Optional - or "skip" to omit)';
+      setLicWizardLines([
+        ...newLines,
+        `✓ Issue Date set: "${finalDate || "None"}"`,
+        "",
+        "Enter verification URL" + urlStr + ":"
+      ]);
+      setLicWizardStep(3);
+      setLicWizardInput("");
+    } else if (licWizardStep === 3) {
+      let finalUrl = val;
+      if (val.toLowerCase() === "skip") {
+        finalUrl = "";
+      } else if (val === "") {
+        finalUrl = licWizardData.credentialUrl;
+      }
+      const finalData = { ...licWizardData, credentialUrl: finalUrl };
+      setLicWizardData(finalData);
+      setLicWizardLines([
+        ...newLines,
+        `✓ Verification URL set: "${finalUrl || "None"}"`,
+        "",
+        licEditingIndex !== null ? "═════ CONFIRM CERTIFICATE EDIT ═════" : "═════ CONFIRM CERTIFICATE ENTRY ═════",
+        `  Name:       ${finalData.name}`,
+        `  Issuer:     ${finalData.issuer}`,
+        `  Date:       ${finalData.issueDate || "Undeclared"}`,
+        `  Verify URL: ${finalData.credentialUrl || "Undeclared"}`,
+        "═════════════════════════════════════",
+        licEditingIndex !== null ? "Execute update operation? [y/n] (Default: y):" : "Execute append operation? [y/n] (Default: y):"
+      ]);
+      setLicWizardStep(4);
+      setLicWizardInput("");
+    } else if (licWizardStep === 4) {
+      const confirmVal = val.toLowerCase();
+      if (confirmVal === "n") {
+        setLicWizardLines([
+          ...newLines,
+          "❌ Operation aborted.",
+          "Closing console session..."
+        ]);
+        setTimeout(() => {
+          setIsAddLicenseOpen(false);
+        }, 1200);
+      } else {
+        setLicWizardLines([
+          ...newLines,
+          "⌛ Committing certificate record to server database...",
+        ]);
+        try {
+          const currentLic = profile?.licenses || [];
+          let updated = [...currentLic];
+          if (licEditingIndex !== null) {
+            updated[licEditingIndex] = licWizardData;
+          } else {
+            updated.push(licWizardData);
+          }
+          await updateProfile({ licenses: updated });
+          setLicWizardLines(prev => [
+            ...prev,
+            licEditingIndex !== null ? "✓ Entry successfully updated!" : "✓ Entry successfully appended!",
+            "Closing wizard console..."
+          ]);
+          setTimeout(() => {
+            setIsAddLicenseOpen(false);
+          }, 1200);
+        } catch (err) {
+          setLicWizardLines(prev => [
+            ...prev,
+            "❌ Database write failure. Transaction rolled back."
+          ]);
+        }
+      }
+      setLicWizardStep(5);
+      setLicWizardInput("");
+    }
   };
 
   const handleDeleteLicense = async (index: number) => {
@@ -873,7 +1435,7 @@ export default function ProfilePage() {
                 )}
                 <button 
                   onClick={() => {
-                    setEditData({
+                    setEditWizardData({
                       fullName: profile?.fullName || "",
                       email: profile?.email || user?.email || "youanindya1@gmail.com",
                       department: profile?.department || "",
@@ -1142,7 +1704,10 @@ export default function ProfilePage() {
                     <p className="text-[10px] text-slate font-semibold mt-0.5">Showcase developer builds folder files.</p>
                   </div>
                   <button 
-                    onClick={() => setIsAddProjectOpen(true)}
+                    onClick={() => {
+                      setProjEditingIndex(null);
+                      setIsAddProjectOpen(true);
+                    }}
                     className="flex items-center gap-1.5 text-xs font-bold text-accent border border-accent/20 bg-accent/5 hover:bg-accent/10 px-3.5 py-1.5 rounded-xl cursor-pointer transition-colors shadow-glow-xs select-none"
                   >
                     <Plus className="h-4 w-4" /> Add Project
@@ -1169,13 +1734,42 @@ export default function ProfilePage() {
                           )}
                           
                           <div className="flex justify-between items-start">
-                            <h4 className="font-black text-sm text-white truncate max-w-[85%]">{proj.title}</h4>
-                            <button 
-                              onClick={() => handleDeleteProject(i)}
-                              className="opacity-0 group-hover:opacity-100 transition-opacity p-1 text-slate hover:text-rose cursor-pointer"
-                            >
-                              <Trash2 className="h-3.5 w-3.5" />
-                            </button>
+                            <h4 className="font-black text-sm text-white truncate max-w-[70%]">{proj.title}</h4>
+                            <div className="flex items-center gap-1 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                              <button 
+                                onClick={() => {
+                                  const item = profile?.projects?.[i];
+                                  if (!item) return;
+                                  setProjEditingIndex(i);
+                                  setProjWizardData({
+                                    title: item.title,
+                                    description: item.description,
+                                    photoUrl: item.photoUrl || "",
+                                    githubLink: item.githubLink || "",
+                                    youtubeLink: item.youtubeLink || ""
+                                  });
+                                  setProjWizardStep(0);
+                                  setProjWizardInput("");
+                                  setProjWizardLines([
+                                    "Initializing project edit wizard...",
+                                    "[sys.log]: Loaded existing database parameters.",
+                                    "// Press Enter directly to preserve current values.",
+                                    "",
+                                    `Enter project title (Current: "${item.title}"):`
+                                  ]);
+                                  setIsAddProjectOpen(true);
+                                }}
+                                className="p-1 text-slate hover:text-accent cursor-pointer transition-colors"
+                              >
+                                <Edit3 className="h-3.5 w-3.5" />
+                              </button>
+                              <button 
+                                onClick={() => handleDeleteProject(i)}
+                                className="p-1 text-slate hover:text-rose cursor-pointer transition-colors"
+                              >
+                                <Trash2 className="h-3.5 w-3.5" />
+                              </button>
+                            </div>
                           </div>
                           <p className="text-xs text-slate mt-1.5 leading-relaxed line-clamp-3 font-semibold">{proj.description}</p>
                         </div>
@@ -1311,7 +1905,10 @@ export default function ProfilePage() {
                       </h3>
                     </div>
                     <button 
-                      onClick={() => setIsAddExperienceOpen(true)}
+                      onClick={() => {
+                        setExpEditingIndex(null);
+                        setIsAddExperienceOpen(true);
+                      }}
                       className="flex items-center gap-1 text-[9px] font-bold text-mint border border-mint/20 bg-mint/5 hover:bg-mint/10 px-2.5 py-1.5 rounded-xl cursor-pointer select-none"
                     >
                       <Plus className="h-3 w-3" /> Add
@@ -1331,12 +1928,40 @@ export default function ProfilePage() {
                             <p className="text-[11px] text-mint font-bold mt-0.5">{exp.company}</p>
                             {exp.description && <p className="text-[11px] text-slate mt-1.5 leading-relaxed font-semibold">{exp.description}</p>}
                           </div>
-                          <button 
-                            onClick={() => handleDeleteExperience(i)}
-                            className="opacity-0 group-hover:opacity-100 transition-opacity text-slate hover:text-rose p-1 cursor-pointer shrink-0"
-                          >
-                            <Trash2 className="h-3.5 w-3.5" />
-                          </button>
+                          <div className="flex items-center gap-1.5 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <button 
+                              onClick={() => {
+                                const item = profile?.experience?.[i];
+                                if (!item) return;
+                                setExpEditingIndex(i);
+                                setExpWizardData({
+                                  role: item.role,
+                                  company: item.company,
+                                  duration: item.duration,
+                                  description: item.description || ""
+                                });
+                                setExpWizardStep(0);
+                                setExpWizardInput("");
+                                setExpWizardLines([
+                                  "Initializing experience edit wizard...",
+                                  "[sys.log]: Loaded existing database parameters.",
+                                  "// Press Enter directly to preserve current values.",
+                                  "",
+                                  `Enter job / internship role (Current: "${item.role}"):`
+                                ]);
+                                setIsAddExperienceOpen(true);
+                              }}
+                              className="text-slate hover:text-mint p-1 cursor-pointer transition-colors"
+                            >
+                              <Edit3 className="h-3.5 w-3.5" />
+                            </button>
+                            <button 
+                              onClick={() => handleDeleteExperience(i)}
+                              className="text-slate hover:text-rose p-1 cursor-pointer transition-colors"
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </button>
+                          </div>
                         </div>
                       ))}
                     </div>
@@ -1354,7 +1979,10 @@ export default function ProfilePage() {
                       </h3>
                     </div>
                     <button 
-                      onClick={() => setIsAddLicenseOpen(true)}
+                      onClick={() => {
+                        setLicEditingIndex(null);
+                        setIsAddLicenseOpen(true);
+                      }}
                       className="flex items-center gap-1 text-[9px] font-bold text-purple border border-purple/20 bg-purple/5 hover:bg-purple/10 px-2.5 py-1.5 rounded-xl cursor-pointer select-none"
                     >
                       <Plus className="h-3 w-3" /> Add
@@ -1384,12 +2012,40 @@ export default function ProfilePage() {
                               </a>
                             )}
                           </div>
-                          <button 
-                            onClick={() => handleDeleteLicense(i)}
-                            className="opacity-0 group-hover:opacity-100 transition-opacity text-slate hover:text-rose p-1 cursor-pointer shrink-0"
-                          >
-                            <Trash2 className="h-3.5 w-3.5" />
-                          </button>
+                          <div className="flex items-center gap-1.5 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <button 
+                              onClick={() => {
+                                const item = profile?.licenses?.[i];
+                                if (!item) return;
+                                setLicEditingIndex(i);
+                                setLicWizardData({
+                                  name: item.name,
+                                  issuer: item.issuer,
+                                  issueDate: item.issueDate || "",
+                                  credentialUrl: item.credentialUrl || ""
+                                });
+                                setLicWizardStep(0);
+                                setLicWizardInput("");
+                                setLicWizardLines([
+                                  "Initializing certification edit wizard...",
+                                  "[sys.log]: Loaded existing database parameters.",
+                                  "// Press Enter directly to preserve current values.",
+                                  "",
+                                  `Enter certification name (Current: "${item.name}"):`
+                                ]);
+                                setIsAddLicenseOpen(true);
+                              }}
+                              className="text-slate hover:text-purple p-1 cursor-pointer transition-colors"
+                            >
+                              <Edit3 className="h-3.5 w-3.5" />
+                            </button>
+                            <button 
+                              onClick={() => handleDeleteLicense(i)}
+                              className="text-slate hover:text-rose p-1 cursor-pointer transition-colors"
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </button>
+                          </div>
                         </div>
                       ))}
                     </div>
@@ -1487,202 +2143,68 @@ export default function ProfilePage() {
 
       {/* Edit Profile Modal */}
       <Modal open={isEditing} onClose={() => setIsEditing(false)} title="Edit Profile Details" variant="hacker" size="lg">
-        <div className="space-y-4 max-h-[70vh] overflow-y-auto px-1">
-          <div className="grid grid-cols-2 gap-4">
-            <Input 
-              label="Full Name" 
-              placeholder="Full name" 
-              value={editData.fullName}
-              onChange={(e) => setEditData({ ...editData, fullName: e.target.value })}
-              required
-            />
-            <Input 
-              label="Department / Course" 
-              placeholder="e.g. Computer Science" 
-              value={editData.department}
-              onChange={(e) => setEditData({ ...editData, department: e.target.value })}
-              required
-            />
-          </div>
-
-          <div className="grid grid-cols-3 gap-4">
-            <Input 
-              label="Graduation Year" 
-              type="number"
-              placeholder="e.g. 2025" 
-              value={editData.graduationYear}
-              onChange={(e) => setEditData({ ...editData, graduationYear: Number(e.target.value) || 2025 })}
-              required
-            />
-            <Input 
-              label="Email Address" 
-              type="email"
-              placeholder="youanindya1@gmail.com" 
-              value={editData.email}
-              onChange={(e) => setEditData({ ...editData, email: e.target.value })}
-            />
-            <div className="w-full">
-              <label className="mb-1.5 block text-xs font-medium text-slate">Gender</label>
-              <select
-                value={editData.gender}
-                onChange={(e) => setEditData({ ...editData, gender: e.target.value })}
-                className="h-10 w-full rounded-xl border border-white/10 bg-[#070b15]/75 px-3 text-xs text-white placeholder:text-subtle transition-colors focus:border-accent/50 focus:outline-none font-mono"
-              >
-                <option value="Undeclared">Undeclared</option>
-                <option value="Male">Male</option>
-                <option value="Female">Female</option>
-                <option value="Other">Other</option>
-              </select>
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 h-[460px] font-mono text-xs overflow-hidden">
+          {/* Left Column: Interactive Terminal Prompt (Col-span 3) */}
+          <div className="lg:col-span-3 flex flex-col bg-black/60 rounded-2xl border border-white/[0.05] p-4 overflow-hidden">
+            {/* Scrollable logs */}
+            <div className="flex-1 overflow-y-auto space-y-1.5 scrollbar-thin scrollbar-thumb-white/10 pr-2 select-text">
+              {editWizardLines.map((line, idx) => {
+                if (line.startsWith("> ")) {
+                  return (
+                    <div key={idx} className="text-mint font-bold">
+                      <span className="text-slate select-none mr-2">guest@campus-bandhu:~$</span>
+                      {line.slice(2)}
+                    </div>
+                  );
+                }
+                if (line.startsWith("✓ ")) {
+                  return <div key={idx} className="text-mint font-semibold">{line}</div>;
+                }
+                if (line.startsWith("❌ ") || line.startsWith("Error")) {
+                  return <div key={idx} className="text-rose font-semibold">{line}</div>;
+                }
+                if (line.startsWith("═════")) {
+                  return <div key={idx} className="text-accent font-bold py-1 select-none">{line}</div>;
+                }
+                return <div key={idx} className="text-white/85 leading-relaxed">{line}</div>;
+              })}
+              <div ref={editWizardEndRef} />
             </div>
-          </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <Input 
-              label="College / University Name" 
-              placeholder="e.g. NSUT, New Delhi" 
-              value={editData.collegeName}
-              onChange={(e) => setEditData({ ...editData, collegeName: e.target.value })}
-            />
-            <Input 
-              label="Resume Drive / File URL" 
-              placeholder="https://drive.google.com/..." 
-              value={editData.resumeUrl}
-              onChange={(e) => setEditData({ ...editData, resumeUrl: e.target.value })}
-            />
-          </div>
-
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 border-t border-white/[0.06] pt-3">
-            <div>
-              <label className="mb-1.5 block text-xs font-semibold text-slate">Profile Picture (Avatar)</label>
-              <div className="flex flex-col gap-2">
-                <button
-                  type="button"
-                  onClick={() => document.getElementById("avatar-file-modal")?.click()}
-                  className="flex w-full items-center justify-center gap-2 rounded-xl bg-white/[0.04] border border-white/10 px-3 py-2 text-xs font-medium text-white hover:bg-white/[0.08] hover:border-mint/30 transition-all cursor-pointer"
-                >
-                  <Upload className="h-3.5 w-3.5 text-mint" /> Upload Photo
-                </button>
+            {/* Prompt line */}
+            {editWizardStep < 14 && (
+              <form onSubmit={handleEditWizardSubmit} className="mt-3 flex items-center border-t border-white/[0.06] pt-3 bg-black/25">
+                <span className="text-slate font-bold select-none mr-2 shrink-0">guest@campus-bandhu:~$</span>
                 <input
-                  type="file"
-                  id="avatar-file-modal"
-                  accept="image/*"
-                  className="hidden"
-                  onChange={(e) => {
-                    const file = e.target.files?.[0];
-                    if (file) {
-                      if (file.size > 2 * 1024 * 1024) {
-                        alert("Image must be under 2MB");
-                        return;
-                      }
-                      const reader = new FileReader();
-                      reader.onloadend = () => {
-                        const result = reader.result;
-                        if (typeof result === "string") {
-                          setEditData(prev => ({ ...prev, avatarUrl: result }));
-                        }
-                      };
-                      reader.readAsDataURL(file);
-                    }
-                  }}
+                  ref={editWizardInputRef}
+                  type="text"
+                  value={editWizardInput}
+                  onChange={(e) => setEditWizardInput(e.target.value)}
+                  className="flex-1 bg-transparent text-mint outline-none border-none focus:outline-none focus:ring-0 p-0 text-xs font-mono"
+                  placeholder="Type config value..."
+                  autoFocus
                 />
-                <Input 
-                  placeholder="Or paste avatar image URL" 
-                  value={editData.avatarUrl}
-                  onChange={(e) => setEditData({ ...editData, avatarUrl: e.target.value })}
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="mb-1.5 block text-xs font-semibold text-slate">Cover Photo (Banner)</label>
-              <div className="flex flex-col gap-2">
-                <button
-                  type="button"
-                  onClick={() => document.getElementById("cover-file-modal")?.click()}
-                  className="flex w-full items-center justify-center gap-2 rounded-xl bg-white/[0.04] border border-white/10 px-3 py-2 text-xs font-medium text-white hover:bg-white/[0.08] hover:border-mint/30 transition-all cursor-pointer"
-                >
-                  <Upload className="h-3.5 w-3.5 text-mint" /> Upload Cover
-                </button>
-                <input
-                  type="file"
-                  id="cover-file-modal"
-                  accept="image/*"
-                  className="hidden"
-                  onChange={(e) => {
-                    const file = e.target.files?.[0];
-                    if (file) {
-                      if (file.size > 2 * 1024 * 1024) {
-                        alert("Image must be under 2MB");
-                        return;
-                      }
-                      const reader = new FileReader();
-                      reader.onloadend = () => {
-                        const result = reader.result;
-                        if (typeof result === "string") {
-                          setEditData(prev => ({ ...prev, coverPhotoUrl: result }));
-                        }
-                      };
-                      reader.readAsDataURL(file);
-                    }
-                  }}
-                />
-                <Input 
-                  placeholder="Or paste cover image URL" 
-                  value={editData.coverPhotoUrl}
-                  onChange={(e) => setEditData({ ...editData, coverPhotoUrl: e.target.value })}
-                />
-              </div>
-            </div>
+              </form>
+            )}
           </div>
 
-          <div className="border-t border-white/[0.06] pt-3">
-            <h4 className="text-xs font-semibold text-accent uppercase tracking-wider mb-3">Connected Profiles</h4>
-            <div className="grid grid-cols-2 gap-4">
-              <Input 
-                label="LeetCode Profile URL" 
-                placeholder="https://leetcode.com/username" 
-                value={editData.leetcodeUrl}
-                onChange={(e) => setEditData({ ...editData, leetcodeUrl: e.target.value })}
-              />
-              <Input 
-                label="ORCID iD / URL" 
-                placeholder="https://orcid.org/0000-0002-1825-0097" 
-                value={editData.orcidUrl}
-                onChange={(e) => setEditData({ ...editData, orcidUrl: e.target.value })}
-              />
-            </div>
-          </div>
-
-          <div>
-            <label className="text-xs text-slate mb-1 block">Bio / Summary</label>
-            <textarea
-              value={editData.bio}
-              onChange={(e) => setEditData({ ...editData, bio: e.target.value })}
-              className="w-full rounded-xl border border-white/[0.06] bg-[#070b15]/75 p-3 text-xs text-white placeholder:text-subtle focus:border-accent/50 focus:outline-none min-h-[80px] font-mono"
-              placeholder="Tell us about yourself..."
-            />
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div className="w-full">
-              <label className="mb-1.5 block text-xs font-semibold text-slate">
-                Skills (Select 1 to 5)
-              </label>
+          {/* Right Column: Visual Skills Inventory (Col-span 2) */}
+          <div className="lg:col-span-2 flex flex-col bg-black/35 rounded-2xl border border-white/[0.05] p-4 overflow-hidden justify-between">
+            <div className="space-y-3">
+              <label className="block text-[10px] font-bold text-slate uppercase tracking-wider font-mono">// Skills inventory (Max 5)</label>
               
-              <div className="flex flex-wrap gap-1.5 mb-2 min-h-[40px] p-2 rounded-xl bg-black/25 border border-white/[0.04]">
-                {editData.skills.length > 0 ? (
-                  editData.skills.map((skill) => (
+              {/* Selected skills cloud */}
+              <div className="flex flex-wrap gap-1.5 min-h-[40px] p-2 rounded-xl bg-black/20 border border-white/[0.04]">
+                {editWizardData.skills.length > 0 ? (
+                  editWizardData.skills.map((skill) => (
                     <span 
                       key={skill} 
-                      className="inline-flex items-center gap-1 rounded-md bg-mint/10 border border-mint/20 px-2 py-0.5 text-[10px] text-mint shadow-glow-sm"
+                      className="inline-flex items-center gap-1 rounded bg-mint/10 border border-mint/20 px-2 py-0.5 text-[9px] text-mint shadow-glow-sm"
                     >
                       {skill}
                       <button
                         type="button"
-                        onClick={() => {
-                          const updated = editData.skills.filter(s => s !== skill);
-                          setEditData({ ...editData, skills: updated });
-                        }}
+                        onClick={() => toggleWizardSkill(skill)}
                         className="text-mint/60 hover:text-mint hover:bg-mint/10 rounded-full w-3.5 h-3.5 flex items-center justify-center font-bold text-[9px] cursor-pointer"
                       >
                         ×
@@ -1690,32 +2212,24 @@ export default function ProfilePage() {
                     </span>
                   ))
                 ) : (
-                  <span className="text-[10px] text-subtle italic select-none">No skills selected (Minimum 1 required)</span>
+                  <span className="text-[10px] text-subtle italic select-none">No skills selected</span>
                 )}
               </div>
 
-              <div className="flex flex-wrap gap-1 max-h-36 overflow-y-auto p-1.5 border border-white/10 bg-white/[0.02] rounded-xl">
+              {/* Toggle-able skill cloud */}
+              <div className="flex flex-wrap gap-1 max-h-56 overflow-y-auto p-1.5 border border-white/[0.05] bg-white/[0.01] rounded-xl scrollbar-thin">
                 {PREDEFINED_SKILLS.map((skill) => {
-                  const isSelected = editData.skills.includes(skill);
+                  const isSelected = editWizardData.skills.includes(skill);
                   return (
                     <button
                       key={skill}
                       type="button"
-                      disabled={!isSelected && editData.skills.length >= 5}
-                      onClick={() => {
-                        if (isSelected) {
-                          const updated = editData.skills.filter(s => s !== skill);
-                          setEditData({ ...editData, skills: updated });
-                        } else {
-                          if (editData.skills.length < 5) {
-                            setEditData({ ...editData, skills: [...editData.skills, skill] });
-                          }
-                        }
-                      }}
-                      className={`px-2 py-1 text-[9px] font-semibold rounded-lg border transition-all cursor-pointer ${
+                      disabled={!isSelected && editWizardData.skills.length >= 5}
+                      onClick={() => toggleWizardSkill(skill)}
+                      className={`px-2 py-1 text-[9px] font-mono font-semibold rounded border transition-all cursor-pointer ${
                         isSelected
                           ? "bg-mint/10 border-mint/30 text-mint shadow-glow-sm"
-                          : "bg-white/[0.02] border-white/10 text-slate hover:bg-white/[0.06] hover:text-white disabled:opacity-35 disabled:cursor-not-allowed"
+                          : "bg-white/[0.02] border-white/10 text-slate hover:bg-white/[0.06] hover:text-white disabled:opacity-30 disabled:cursor-not-allowed"
                       }`}
                     >
                       {skill}
@@ -1725,128 +2239,69 @@ export default function ProfilePage() {
               </div>
             </div>
 
-            <Input 
-              label="Interests (comma separated)" 
-              placeholder="ai, web3, design" 
-              value={editData.interests}
-              onChange={(e) => setEditData({ ...editData, interests: e.target.value })}
-            />
+            {/* Quick Helper */}
+            <div className="text-[9px] text-slate/40 leading-normal border-t border-white/[0.04] pt-3 select-none">
+              ℹ️ Toggle skills on the cloud immediately. They will commit upon executing the save changes sequence in the CLI editor.
+            </div>
           </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <Input 
-              label="GitHub Profile URL" 
-              type="url"
-              placeholder="https://github.com/username" 
-              value={editData.githubUrl}
-              onChange={(e) => setEditData({ ...editData, githubUrl: e.target.value })}
-            />
-            <Input 
-              label="LinkedIn Profile URL" 
-              type="url"
-              placeholder="https://linkedin.com/in/username" 
-              value={editData.linkedinUrl}
-              onChange={(e) => setEditData({ ...editData, linkedinUrl: e.target.value })}
-            />
-          </div>
-
-          <button 
-            onClick={handleSave}
-            className="w-full mt-4 rounded-xl bg-gradient-to-r from-mint to-accent py-3 text-xs font-bold text-white shadow-[0_0_20px_rgba(56,242,181,0.2)] transition-all hover:scale-[1.01] hover:shadow-[0_0_30px_rgba(56,242,181,0.35)] cursor-pointer select-none active:scale-[0.99] font-mono"
-          >
-            EXECUTE: Save Changes to Database
-          </button>
         </div>
       </Modal>
 
       {/* Add Project Modal */}
-      <Modal open={isAddProjectOpen} onClose={() => setIsAddProjectOpen(false)} title="Add Project Showcase" variant="hacker" size="md">
-        <form onSubmit={handleAddProject} className="space-y-4 p-1">
-          <Input 
-            label="Project Title" 
-            placeholder="e.g. Campus Bandhu App" 
-            value={newProject.title}
-            onChange={(e) => setNewProject({ ...newProject, title: e.target.value })}
-            required
-          />
-          <div>
-            <label className="text-xs text-slate mb-1 block">Description</label>
-            <textarea
-              value={newProject.description}
-              onChange={(e) => setNewProject({ ...newProject, description: e.target.value })}
-              className="w-full rounded-xl border border-white/[0.06] bg-[#070b15]/75 p-3 text-xs text-white placeholder:text-subtle focus:border-accent/50 focus:outline-none min-h-[80px] font-mono"
-              placeholder="Explain what your project does..."
-              required
-            />
+      <Modal open={isAddProjectOpen} onClose={() => setIsAddProjectOpen(false)} title={projEditingIndex !== null ? "Edit Project Showcase" : "Add Project Showcase"} variant="hacker" size="md">
+        <div className="flex flex-col h-[380px] bg-black/60 rounded-2xl border border-white/[0.05] p-4 font-mono text-xs overflow-hidden">
+          {/* Scrollable logs */}
+          <div className="flex-1 overflow-y-auto space-y-1.5 scrollbar-thin scrollbar-thumb-white/10 pr-2 select-text">
+            {projWizardLines.map((line, idx) => {
+              if (line.startsWith("> ")) {
+                return (
+                  <div key={idx} className="text-mint font-bold">
+                    <span className="text-slate select-none mr-2">guest@campus-bandhu:~$</span>
+                    {line.slice(2)}
+                  </div>
+                );
+              }
+              if (line.startsWith("✓ ")) {
+                return <div key={idx} className="text-mint font-semibold">{line}</div>;
+              }
+              if (line.startsWith("❌ ") || line.startsWith("Error")) {
+                return <div key={idx} className="text-rose font-semibold">{line}</div>;
+              }
+              if (line.startsWith("═════")) {
+                return <div key={idx} className="text-accent font-bold py-1 select-none">{line}</div>;
+              }
+              return <div key={idx} className="text-white/85 leading-relaxed">{line}</div>;
+            })}
+            <div ref={projWizardEndRef} />
           </div>
-          
-          <div>
-            <label className="mb-1.5 block text-xs font-semibold text-slate">Project Image / Banner</label>
-            <div className="flex flex-col gap-2">
-              <button
-                type="button"
-                onClick={() => document.getElementById("project-photo-modal")?.click()}
-                className="flex w-full items-center justify-center gap-2 rounded-xl bg-white/[0.02] border border-white/10 px-3 py-2 text-xs font-bold text-white hover:bg-white/[0.06] hover:border-accent/40 hover:text-accent transition-all cursor-pointer font-mono"
-              >
-                <Upload className="h-3.5 w-3.5 text-accent" /> Upload Project Banner
-              </button>
+
+          {/* Prompt line */}
+          {projWizardStep < 6 && (
+            <form onSubmit={handleProjWizardSubmit} className="mt-3 flex items-center border-t border-white/[0.06] pt-3 bg-black/25">
+              <span className="text-slate font-bold select-none mr-2 shrink-0">guest@campus-bandhu:~$</span>
               <input
-                type="file"
-                id="project-photo-modal"
-                accept="image/*"
-                className="hidden"
-                onChange={(e) => {
-                  const file = e.target.files?.[0];
-                  if (file) {
-                    if (file.size > 2 * 1024 * 1024) {
-                      alert("Image must be under 2MB");
-                      return;
-                    }
-                    const reader = new FileReader();
-                    reader.onloadend = () => {
-                      const result = reader.result;
-                      if (typeof result === "string") {
-                        setNewProject(prev => ({ ...prev, photoUrl: result }));
-                      }
-                    };
-                    reader.readAsDataURL(file);
-                  }
-                }}
+                ref={projWizardInputRef}
+                type="text"
+                value={projWizardInput}
+                onChange={(e) => setProjWizardInput(e.target.value)}
+                className="flex-1 bg-transparent text-mint outline-none border-none focus:outline-none focus:ring-0 p-0 text-xs font-mono"
+                placeholder={
+                  projWizardStep === 0 ? (projWizardData.title ? `[Current: ${projWizardData.title}]` : "Enter project title...") :
+                  projWizardStep === 1 ? (projWizardData.description ? `[Current: ${projWizardData.description.substring(0, 25)}...]` : "Enter description...") :
+                  projWizardStep === 2 ? (projWizardData.photoUrl ? `[Current: ${projWizardData.photoUrl.substring(0, 25)}...]` : 'Enter banner URL or "skip"...') :
+                  projWizardStep === 3 ? (projWizardData.githubLink ? `[Current: ${projWizardData.githubLink}]` : 'Enter GitHub URL or "skip"...') :
+                  projWizardStep === 4 ? (projWizardData.youtubeLink ? `[Current: ${projWizardData.youtubeLink}]` : 'Enter YouTube URL or "skip"...') :
+                  "y / n..."
+                }
+                autoFocus
               />
-              <Input 
-                placeholder="Or paste direct image URL" 
-                value={newProject.photoUrl}
-                onChange={(e) => setNewProject({ ...newProject, photoUrl: e.target.value })}
-              />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <Input 
-              label="GitHub Repo Link" 
-              placeholder="https://github.com/..." 
-              value={newProject.githubLink}
-              onChange={(e) => setNewProject({ ...newProject, githubLink: e.target.value })}
-            />
-            <Input 
-              label="YouTube Video Link" 
-              placeholder="https://youtube.com/..." 
-              value={newProject.youtubeLink}
-              onChange={(e) => setNewProject({ ...newProject, youtubeLink: e.target.value })}
-            />
-          </div>
-
-          <button
-            type="submit"
-            className="w-full mt-4 rounded-xl bg-gradient-to-r from-accent to-purple py-3 text-xs font-bold text-white cursor-pointer shadow-glow-sm hover:scale-[1.01] transition-all active:scale-[0.99] select-none font-mono"
-          >
-            EXECUTE: Add Project
-          </button>
-        </form>
+            </form>
+          )}
+        </div>
       </Modal>
 
       {/* Add Experience Modal */}
-      <Modal open={isAddExperienceOpen} onClose={() => setIsAddExperienceOpen(false)} title="Add Work Experience" variant="hacker" size="md">
+      <Modal open={isAddExperienceOpen} onClose={() => setIsAddExperienceOpen(false)} title={expEditingIndex !== null ? "Edit Work Experience" : "Add Work Experience"} variant="hacker" size="md">
         <div className="flex flex-col h-[380px] bg-black/60 rounded-2xl border border-white/[0.05] p-4 font-mono text-xs overflow-hidden">
           {/* Scrollable logs */}
           <div className="flex-1 overflow-y-auto space-y-1.5 scrollbar-thin scrollbar-thumb-white/10 pr-2 select-text">
@@ -1884,10 +2339,10 @@ export default function ProfilePage() {
                 onChange={(e) => setExpWizardInput(e.target.value)}
                 className="flex-1 bg-transparent text-mint outline-none border-none focus:outline-none focus:ring-0 p-0 text-xs font-mono"
                 placeholder={
-                  expWizardStep === 0 ? "Enter role..." :
-                  expWizardStep === 1 ? "Enter company..." :
-                  expWizardStep === 2 ? "Enter duration..." :
-                  expWizardStep === 3 ? 'Enter description or "skip"...' :
+                  expWizardStep === 0 ? (expWizardData.role ? `[Current: ${expWizardData.role}]` : "Enter role...") :
+                  expWizardStep === 1 ? (expWizardData.company ? `[Current: ${expWizardData.company}]` : "Enter company...") :
+                  expWizardStep === 2 ? (expWizardData.duration ? `[Current: ${expWizardData.duration}]` : "Enter duration...") :
+                  expWizardStep === 3 ? (expWizardData.description ? `[Current: ${expWizardData.description.substring(0, 25)}...]` : 'Enter description or "skip"...') :
                   "y / n..."
                 }
                 autoFocus
@@ -1898,41 +2353,55 @@ export default function ProfilePage() {
       </Modal>
 
       {/* Add License Modal */}
-      <Modal open={isAddLicenseOpen} onClose={() => setIsAddLicenseOpen(false)} title="Add License / Certification" variant="hacker" size="md">
-        <form onSubmit={handleAddLicense} className="space-y-4 p-1">
-          <Input 
-            label="Certification Name" 
-            placeholder="e.g. AWS Certified Solutions Architect" 
-            value={newLicense.name}
-            onChange={(e) => setNewLicense({ ...newLicense, name: e.target.value })}
-            required
-          />
-          <Input 
-            label="Issuing Authority" 
-            placeholder="e.g. Amazon Web Services" 
-            value={newLicense.issuer}
-            onChange={(e) => setNewLicense({ ...newLicense, issuer: e.target.value })}
-            required
-          />
-          <Input 
-            label="Issue Date (Optional)" 
-            placeholder="e.g. September 2024" 
-            value={newLicense.issueDate}
-            onChange={(e) => setNewLicense({ ...newLicense, issueDate: e.target.value })}
-          />
-          <Input 
-            label="Credential Verification Link" 
-            placeholder="https://credly.com/..." 
-            value={newLicense.credentialUrl}
-            onChange={(e) => setNewLicense({ ...newLicense, credentialUrl: e.target.value })}
-          />
-          <button
-            type="submit"
-            className="w-full mt-4 rounded-xl bg-gradient-to-r from-purple to-electric py-3 text-xs font-bold text-white cursor-pointer shadow-glow-sm hover:scale-[1.01] transition-all active:scale-[0.99] select-none font-mono"
-          >
-            EXECUTE: Add Certificate
-          </button>
-        </form>
+      <Modal open={isAddLicenseOpen} onClose={() => setIsAddLicenseOpen(false)} title={licEditingIndex !== null ? "Edit License / Certification" : "Add License / Certification"} variant="hacker" size="md">
+        <div className="flex flex-col h-[380px] bg-black/60 rounded-2xl border border-white/[0.05] p-4 font-mono text-xs overflow-hidden">
+          {/* Scrollable logs */}
+          <div className="flex-1 overflow-y-auto space-y-1.5 scrollbar-thin scrollbar-thumb-white/10 pr-2 select-text">
+            {licWizardLines.map((line, idx) => {
+              if (line.startsWith("> ")) {
+                return (
+                  <div key={idx} className="text-mint font-bold">
+                    <span className="text-slate select-none mr-2">guest@campus-bandhu:~$</span>
+                    {line.slice(2)}
+                  </div>
+                );
+              }
+              if (line.startsWith("✓ ")) {
+                return <div key={idx} className="text-mint font-semibold">{line}</div>;
+              }
+              if (line.startsWith("❌ ") || line.startsWith("Error")) {
+                return <div key={idx} className="text-rose font-semibold">{line}</div>;
+              }
+              if (line.startsWith("═════")) {
+                return <div key={idx} className="text-accent font-bold py-1 select-none">{line}</div>;
+              }
+              return <div key={idx} className="text-white/85 leading-relaxed">{line}</div>;
+            })}
+            <div ref={licWizardEndRef} />
+          </div>
+
+          {/* Prompt line */}
+          {licWizardStep < 5 && (
+            <form onSubmit={handleLicWizardSubmit} className="mt-3 flex items-center border-t border-white/[0.06] pt-3 bg-black/25">
+              <span className="text-slate font-bold select-none mr-2 shrink-0">guest@campus-bandhu:~$</span>
+              <input
+                ref={licWizardInputRef}
+                type="text"
+                value={licWizardInput}
+                onChange={(e) => setLicWizardInput(e.target.value)}
+                className="flex-1 bg-transparent text-mint outline-none border-none focus:outline-none focus:ring-0 p-0 text-xs font-mono"
+                placeholder={
+                  licWizardStep === 0 ? (licWizardData.name ? `[Current: ${licWizardData.name}]` : "Enter name...") :
+                  licWizardStep === 1 ? (licWizardData.issuer ? `[Current: ${licWizardData.issuer}]` : "Enter issuer...") :
+                  licWizardStep === 2 ? (licWizardData.issueDate ? `[Current: ${licWizardData.issueDate}]` : 'Enter date or "skip"...') :
+                  licWizardStep === 3 ? (licWizardData.credentialUrl ? `[Current: ${licWizardData.credentialUrl}]` : 'Enter verify URL or "skip"...') :
+                  "y / n..."
+                }
+                autoFocus
+              />
+            </form>
+          )}
+        </div>
       </Modal>
 
       {/* Avatar Options Modal */}
