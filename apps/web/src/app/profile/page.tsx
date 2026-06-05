@@ -100,14 +100,44 @@ export default function ProfilePage() {
     githubLink: ""
   });
 
-  // Experience Modal
+  // Experience CLI Wizard Modal State
   const [isAddExperienceOpen, setIsAddExperienceOpen] = useState(false);
-  const [newExperience, setNewExperience] = useState({
+  const [expWizardStep, setExpWizardStep] = useState(0);
+  const [expWizardData, setExpWizardData] = useState({
     role: "",
     company: "",
     duration: "",
     description: ""
   });
+  const [expWizardInput, setExpWizardInput] = useState("");
+  const [expWizardLines, setExpWizardLines] = useState<string[]>([]);
+  const expWizardInputRef = useRef<HTMLInputElement>(null);
+  const expWizardEndRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (isAddExperienceOpen) {
+      setExpWizardStep(0);
+      setExpWizardData({ role: "", company: "", duration: "", description: "" });
+      setExpWizardInput("");
+      setExpWizardLines([
+        "Initializing experience logging wizard...",
+        "[sys.log]: Ready to append employment history.",
+        "",
+        "Enter job / internship role (e.g. Fullstack Engineer Intern):"
+      ]);
+      setTimeout(() => {
+        expWizardInputRef.current?.focus();
+        expWizardEndRef.current?.scrollIntoView({ behavior: "smooth" });
+      }, 100);
+    }
+  }, [isAddExperienceOpen]);
+
+  useEffect(() => {
+    if (isAddExperienceOpen) {
+      expWizardEndRef.current?.scrollIntoView({ behavior: "smooth" });
+      expWizardInputRef.current?.focus();
+    }
+  }, [expWizardLines, expWizardStep, isAddExperienceOpen]);
 
   // License Modal
   const [isAddLicenseOpen, setIsAddLicenseOpen] = useState(false);
@@ -291,16 +321,100 @@ export default function ProfilePage() {
     }
   };
 
-  const handleAddExperience = async (e: React.FormEvent) => {
+  const handleExpWizardSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newExperience.role || !newExperience.company || !newExperience.duration) {
-      alert("Role, Company, and Duration are required!");
+    const val = expWizardInput.trim();
+    if (expWizardStep < 4 && val === "" && expWizardStep !== 3) {
       return;
     }
-    const currentExp = profile?.experience || [];
-    await updateProfile({ experience: [...currentExp, newExperience] });
-    setIsAddExperienceOpen(false);
-    setNewExperience({ role: "", company: "", duration: "", description: "" });
+
+    const newLines = [...expWizardLines, `> ${expWizardInput}`];
+
+    if (expWizardStep === 0) {
+      setExpWizardData(prev => ({ ...prev, role: val }));
+      setExpWizardLines([
+        ...newLines,
+        `✓ Role set: "${val}"`,
+        "",
+        "Enter company / club name (e.g. Google DeepMind):"
+      ]);
+      setExpWizardStep(1);
+      setExpWizardInput("");
+    } else if (expWizardStep === 1) {
+      setExpWizardData(prev => ({ ...prev, company: val }));
+      setExpWizardLines([
+        ...newLines,
+        `✓ Company set: "${val}"`,
+        "",
+        "Enter duration (e.g. Jun 2023 - Present or Summer 2024):"
+      ]);
+      setExpWizardStep(2);
+      setExpWizardInput("");
+    } else if (expWizardStep === 2) {
+      setExpWizardData(prev => ({ ...prev, duration: val }));
+      setExpWizardLines([
+        ...newLines,
+        `✓ Duration set: "${val}"`,
+        "",
+        'Enter description (Optional - type accomplishments, or "skip" to omit):'
+      ]);
+      setExpWizardStep(3);
+      setExpWizardInput("");
+    } else if (expWizardStep === 3) {
+      const descVal = val.toLowerCase() === "skip" ? "" : val;
+      const finalData = { ...expWizardData, description: descVal };
+      setExpWizardData(finalData);
+      setExpWizardLines([
+        ...newLines,
+        `✓ Description set: "${descVal || "None"}"`,
+        "",
+        "═════ CONFIRM EXPERIENCE ENTRY ═════",
+        `  Role:        ${finalData.role}`,
+        `  Company:     ${finalData.company}`,
+        `  Duration:    ${finalData.duration}`,
+        `  Description: ${finalData.description || "Undeclared"}`,
+        "════════════════════════════════════",
+        "Execute append operation? [y/n] (Default: y):"
+      ]);
+      setExpWizardStep(4);
+      setExpWizardInput("");
+    } else if (expWizardStep === 4) {
+      const confirmVal = val.toLowerCase();
+      if (confirmVal === "n") {
+        setExpWizardLines([
+          ...newLines,
+          "❌ Operation aborted.",
+          "Closing console session..."
+        ]);
+        setTimeout(() => {
+          setIsAddExperienceOpen(false);
+        }, 1200);
+      } else {
+        setExpWizardLines([
+          ...newLines,
+          "⌛ Committing experience record to server database...",
+        ]);
+        try {
+          const currentExp = profile?.experience || [];
+          await updateProfile({ experience: [...currentExp, expWizardData] });
+          setExpWizardLines(prev => [
+            ...prev,
+            "✓ Entry successfully appended!",
+            "Closing wizard console..."
+          ]);
+          setTimeout(() => {
+            setIsAddExperienceOpen(false);
+          }, 1200);
+        } catch (err) {
+          setExpWizardLines(prev => [
+            ...prev,
+            "❌ Database write failure. Transaction rolled back."
+          ]);
+        }
+      }
+      setExpWizardStep(5);
+      setExpWizardInput("");
+    }
   };
 
   const handleDeleteExperience = async (index: number) => {
@@ -1733,44 +1847,54 @@ export default function ProfilePage() {
 
       {/* Add Experience Modal */}
       <Modal open={isAddExperienceOpen} onClose={() => setIsAddExperienceOpen(false)} title="Add Work Experience" variant="hacker" size="md">
-        <form onSubmit={handleAddExperience} className="space-y-4 p-1">
-          <Input 
-            label="Job / Internship Role" 
-            placeholder="e.g. Fullstack Engineer Intern" 
-            value={newExperience.role}
-            onChange={(e) => setNewExperience({ ...newExperience, role: e.target.value })}
-            required
-          />
-          <Input 
-            label="Company / Club Name" 
-            placeholder="e.g. Google DeepMind" 
-            value={newExperience.company}
-            onChange={(e) => setNewExperience({ ...newExperience, company: e.target.value })}
-            required
-          />
-          <Input 
-            label="Duration" 
-            placeholder="e.g. Jun 2023 - Present or Summer 2024" 
-            value={newExperience.duration}
-            onChange={(e) => setNewExperience({ ...newExperience, duration: e.target.value })}
-            required
-          />
-          <div>
-            <label className="text-xs text-slate mb-1 block">Description (Optional)</label>
-            <textarea
-              value={newExperience.description}
-              onChange={(e) => setNewExperience({ ...newExperience, description: e.target.value })}
-              className="w-full rounded-xl border border-white/[0.06] bg-[#070b15]/75 p-3 text-xs text-white placeholder:text-subtle focus:border-accent/50 focus:outline-none min-h-[80px] font-mono"
-              placeholder="Highlight your key achievements and contributions..."
-            />
+        <div className="flex flex-col h-[380px] bg-black/60 rounded-2xl border border-white/[0.05] p-4 font-mono text-xs overflow-hidden">
+          {/* Scrollable logs */}
+          <div className="flex-1 overflow-y-auto space-y-1.5 scrollbar-thin scrollbar-thumb-white/10 pr-2 select-text">
+            {expWizardLines.map((line, idx) => {
+              if (line.startsWith("> ")) {
+                return (
+                  <div key={idx} className="text-mint font-bold">
+                    <span className="text-slate select-none mr-2">guest@campus-bandhu:~$</span>
+                    {line.slice(2)}
+                  </div>
+                );
+              }
+              if (line.startsWith("✓ ")) {
+                return <div key={idx} className="text-mint font-semibold">{line}</div>;
+              }
+              if (line.startsWith("❌ ") || line.startsWith("Error")) {
+                return <div key={idx} className="text-rose font-semibold">{line}</div>;
+              }
+              if (line.startsWith("═════")) {
+                return <div key={idx} className="text-accent font-bold py-1 select-none">{line}</div>;
+              }
+              return <div key={idx} className="text-white/85 leading-relaxed">{line}</div>;
+            })}
+            <div ref={expWizardEndRef} />
           </div>
-          <button
-            type="submit"
-            className="w-full mt-4 rounded-xl bg-gradient-to-r from-mint to-electric py-3 text-xs font-bold text-white cursor-pointer shadow-glow-sm hover:scale-[1.01] transition-all active:scale-[0.99] select-none font-mono"
-          >
-            EXECUTE: Add Experience
-          </button>
-        </form>
+
+          {/* Prompt line */}
+          {expWizardStep < 5 && (
+            <form onSubmit={handleExpWizardSubmit} className="mt-3 flex items-center border-t border-white/[0.06] pt-3 bg-black/25">
+              <span className="text-slate font-bold select-none mr-2 shrink-0">guest@campus-bandhu:~$</span>
+              <input
+                ref={expWizardInputRef}
+                type="text"
+                value={expWizardInput}
+                onChange={(e) => setExpWizardInput(e.target.value)}
+                className="flex-1 bg-transparent text-mint outline-none border-none focus:outline-none focus:ring-0 p-0 text-xs font-mono"
+                placeholder={
+                  expWizardStep === 0 ? "Enter role..." :
+                  expWizardStep === 1 ? "Enter company..." :
+                  expWizardStep === 2 ? "Enter duration..." :
+                  expWizardStep === 3 ? 'Enter description or "skip"...' :
+                  "y / n..."
+                }
+                autoFocus
+              />
+            </form>
+          )}
+        </div>
       </Modal>
 
       {/* Add License Modal */}
