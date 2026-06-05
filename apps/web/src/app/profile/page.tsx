@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import {
-  MapPin, Mail, Calendar, BookOpen, Award, Star,
+  MapPin, Mail, Calendar, BookOpen, Award, Star, Users, Zap, Briefcase,
   Edit3, Github, Linkedin, ExternalLink, Camera, Upload, X, Plus, Trash2, Code2
 } from "lucide-react";
 
@@ -434,7 +434,7 @@ export default function ProfilePage() {
           <GlassCard className="relative overflow-hidden">
             {/* Banner */}
             <div 
-              className={`absolute inset-x-0 top-0 h-28 w-full overflow-hidden group/cover ${
+              className={`absolute inset-x-0 top-0 h-36 sm:h-44 w-full overflow-hidden group/cover ${
                 isRepositioningCover ? "cursor-move touch-none select-none z-10" : "cursor-pointer"
               }`}
               onClick={() => { if (!isRepositioningCover) setCoverMenuOpen(true); }}
@@ -535,23 +535,28 @@ export default function ProfilePage() {
               />
             </div>
 
-            <div className="relative pt-20">
+            <div className="relative pt-28 sm:pt-36">
               <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
                 <div className="flex items-end gap-4">
-                  <div className="relative group cursor-pointer" onClick={() => setAvatarMenuOpen(true)}>
+                  <motion.div 
+                    whileHover={{ scale: 1.05 }}
+                    transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                    className="relative group cursor-pointer rounded-full" 
+                    onClick={() => setAvatarMenuOpen(true)}
+                  >
                     <Avatar
                       src={profile?.avatarUrl || user?.photoURL}
                       name={profile?.fullName || "User"}
                       size="xl"
                       status="online"
                       glow
-                      className="ring-4 ring-base"
+                      className="ring-4 ring-accent/30 hover:ring-accent transition-all duration-300 shadow-glow-sm"
                       imageStyle={{
                         transform: `scale(${profile?.avatarZoom || 1}) translate(${profile?.avatarX || 0}px, ${profile?.avatarY || 0}px)`
                       }}
                     />
-                    <div className="absolute inset-0 bg-black/40 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                      <Camera className="h-5 w-5 text-white animate-pulse" />
+                    <div className="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 border border-accent/30">
+                      <Camera className="h-5 w-5 text-accent animate-pulse" />
                     </div>
                     <input
                       type="file"
@@ -576,16 +581,25 @@ export default function ProfilePage() {
                         }
                       }}
                     />
-                  </div>
+                  </motion.div>
                   <div>
-                    <h1 className="font-heading text-2xl font-bold">{profile?.fullName || "User"}</h1>
-                    <div className="mt-1 flex items-center gap-2">
-                      <NeonBadge color={(ROLE_COLORS[role!] || "blue") as any}>
+                    <h1 className="font-heading text-2xl sm:text-3xl font-extrabold tracking-tight text-white flex items-center gap-2">
+                      {profile?.fullName || "User"}
+                      {profile?.userId && (
+                        <span className="text-xs font-mono text-mint/80 bg-mint/5 border border-mint/20 rounded-md px-1.5 py-0.5 select-none">
+                          @{profile.userId}
+                        </span>
+                      )}
+                    </h1>
+                    <div className="mt-1.5 flex flex-wrap items-center gap-2">
+                      <NeonBadge color={(ROLE_COLORS[role!] || "blue") as any} size="sm">
                         {ROLE_LABELS[role!] || "Student"}
                       </NeonBadge>
-                      <span className="text-xs text-slate">{profile?.department || "Undeclared"}</span>
+                      <span className="text-xs font-semibold text-slate-400 bg-white/[0.03] border border-white/[0.05] rounded-full px-2.5 py-0.5">
+                        {profile?.department || "Undeclared"}
+                      </span>
                       {profile?.gender && profile.gender !== "Undeclared" && (
-                        <span className="text-[10px] text-slate px-2 py-0.5 rounded bg-white/[0.04] border border-white/[0.04]">
+                        <span className="text-xs font-semibold text-slate-400 bg-white/[0.03] border border-white/[0.05] rounded-full px-2.5 py-0.5">
                           {profile.gender}
                         </span>
                       )}
@@ -599,7 +613,7 @@ export default function ProfilePage() {
                       href={profile.resumeUrl}
                       target="_blank"
                       rel="noreferrer"
-                      className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.03] hover:bg-white/[0.06] px-4 py-2 text-sm font-medium text-white transition-colors cursor-pointer"
+                      className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.02] hover:bg-white/[0.06] hover:border-accent/30 hover:shadow-[0_0_15px_rgba(0,212,255,0.1)] px-4 py-2.5 text-xs font-semibold text-white transition-all cursor-pointer"
                     >
                       View Resume
                     </a>
@@ -632,38 +646,89 @@ export default function ProfilePage() {
                       });
                       setIsEditing(true);
                     }}
-                    className="flex items-center gap-2 rounded-xl bg-white/[0.06] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-white/10 cursor-pointer"
+                    className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.05] hover:bg-white/[0.1] hover:border-accent/40 hover:shadow-[0_0_15px_rgba(0,212,255,0.15)] px-4 py-2.5 text-xs font-semibold text-white transition-all cursor-pointer"
                   >
-                    <Edit3 className="h-4 w-4" /> Edit Profile
+                    <Edit3 className="h-3.5 w-3.5" /> Edit Profile
                   </button>
                 </div>
               </div>
 
               {/* Bio + Info */}
-              <p className="mt-4 text-sm text-slate max-w-2xl font-medium">
+              <p className="mt-5 text-sm text-slate-300 max-w-3xl leading-relaxed font-medium pl-3 border-l-2 border-accent/30">
                 {profile?.bio || "Passionate about AI and building decentralized systems."}
               </p>
 
-              <div className="mt-4 flex flex-wrap gap-4 text-xs text-slate">
-                <span className="inline-flex items-center gap-1"><MapPin className="h-3.5 w-3.5 text-accent" /> {profile?.collegeName || "NSUT, New Delhi"}</span>
-                <span className="inline-flex items-center gap-1"><Mail className="h-3.5 w-3.5 text-mint" /> {profile?.email || user?.email || "youanindya1@gmail.com"}</span>
-                <span className="inline-flex items-center gap-1"><Calendar className="h-3.5 w-3.5 text-purple" /> Class of {profile?.graduationYear || 2025}</span>
-                <span className="inline-flex items-center gap-1"><BookOpen className="h-3.5 w-3.5 text-cyan" /> {profile?.department || "Undeclared"}</span>
+              <div className="mt-6 flex flex-wrap gap-4 text-xs text-slate-300">
+                <span className="inline-flex items-center gap-2 bg-white/[0.02] border border-white/[0.04] rounded-lg py-1 px-2.5">
+                  <span className="p-1 rounded-md bg-accent/10 text-accent"><MapPin className="h-3.5 w-3.5" /></span>
+                  {profile?.collegeName || "NSUT, New Delhi"}
+                </span>
+                <span className="inline-flex items-center gap-2 bg-white/[0.02] border border-white/[0.04] rounded-lg py-1 px-2.5">
+                  <span className="p-1 rounded-md bg-mint/10 text-mint"><Mail className="h-3.5 w-3.5" /></span>
+                  {profile?.email || user?.email || "youanindya1@gmail.com"}
+                </span>
+                <span className="inline-flex items-center gap-2 bg-white/[0.02] border border-white/[0.04] rounded-lg py-1 px-2.5">
+                  <span className="p-1 rounded-md bg-purple/10 text-purple"><Calendar className="h-3.5 w-3.5" /></span>
+                  Class of {profile?.graduationYear || 2025}
+                </span>
+                <span className="inline-flex items-center gap-2 bg-white/[0.02] border border-white/[0.04] rounded-lg py-1 px-2.5">
+                  <span className="p-1 rounded-md bg-cyan/10 text-cyan"><BookOpen className="h-3.5 w-3.5" /></span>
+                  {profile?.department || "Undeclared"}
+                </span>
               </div>
 
               {/* Stats */}
-              <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
+              <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-4">
                 {[
-                  { label: "Events Joined", value: profile?.stats?.eventsJoined || 0, color: "text-accent" },
-                  { label: "Connections", value: profile?.stats?.connections || 0, color: "text-mint" },
-                  { label: "Achievements", value: profile?.stats?.achievements || 0, color: "text-purple" },
-                  { label: "XP Points", value: profile?.stats?.xpPoints || 0, color: "text-blaze" },
+                  { 
+                    label: "Events Joined", 
+                    value: profile?.stats?.eventsJoined || 0, 
+                    icon: <Calendar className="h-5 w-5" />, 
+                    colorClass: "text-accent", 
+                    bgClass: "bg-accent/5 hover:bg-accent/10 hover:border-accent/30 hover:shadow-[0_0_15px_rgba(0,212,255,0.08)]",
+                    iconContainerClass: "bg-accent/10 text-accent"
+                  },
+                  { 
+                    label: "Connections", 
+                    value: profile?.stats?.connections || 0, 
+                    icon: <Users className="h-5 w-5" />, 
+                    colorClass: "text-mint", 
+                    bgClass: "bg-mint/5 hover:bg-mint/10 hover:border-mint/30 hover:shadow-[0_0_15px_rgba(56,242,181,0.08)]",
+                    iconContainerClass: "bg-mint/10 text-mint"
+                  },
+                  { 
+                    label: "Achievements", 
+                    value: profile?.stats?.achievements || 0, 
+                    icon: <Award className="h-5 w-5" />, 
+                    colorClass: "text-purple", 
+                    bgClass: "bg-purple/5 hover:bg-purple/10 hover:border-purple/30 hover:shadow-[0_0_15px_rgba(139,92,246,0.08)]",
+                    iconContainerClass: "bg-purple/10 text-purple"
+                  },
+                  { 
+                    label: "XP Points", 
+                    value: profile?.stats?.xpPoints || 0, 
+                    icon: <Zap className="h-5 w-5" />, 
+                    colorClass: "text-blaze", 
+                    bgClass: "bg-blaze/5 hover:bg-blaze/10 hover:border-blaze/30 hover:shadow-[0_0_15px_rgba(255,122,24,0.08)]",
+                    iconContainerClass: "bg-blaze/10 text-blaze"
+                  },
                 ].map((stat) => (
-                  <div key={stat.label} className="rounded-xl bg-white/[0.03] p-3 text-center border border-white/[0.04]">
-                    <p className={`font-heading text-xl font-bold ${stat.color}`}>
-                      <AnimatedCounter value={stat.value} />
-                    </p>
-                    <p className="text-[10px] text-slate">{stat.label}</p>
+                  <div 
+                    key={stat.label} 
+                    className={cn(
+                      "rounded-xl border border-white/[0.05] p-4 flex items-center justify-between transition-all duration-300", 
+                      stat.bgClass
+                    )}
+                  >
+                    <div className="text-left">
+                      <p className="text-[10px] font-semibold text-slate uppercase tracking-wider font-semibold">{stat.label}</p>
+                      <p className={cn("font-heading text-2xl font-black mt-1", stat.colorClass)}>
+                        <AnimatedCounter value={stat.value} />
+                      </p>
+                    </div>
+                    <div className={cn("p-2 rounded-xl shrink-0", stat.iconContainerClass)}>
+                      {stat.icon}
+                    </div>
                   </div>
                 ))}
               </div>
@@ -846,17 +911,17 @@ export default function ProfilePage() {
                 <div className="flex flex-col justify-center border-t border-white/[0.04] pt-4 md:pt-0 md:border-t-0 md:border-l md:pl-6 border-white/[0.06] self-stretch gap-2.5">
                   <p className="text-[10px] text-slate uppercase tracking-wider font-bold">Earned Hacker Badges</p>
                   <div className="flex gap-2">
-                    <div className="flex-1 rounded-lg bg-white/[0.02] border border-[#FFA116]/25 p-2 text-center transition-all hover:bg-white/[0.04] hover:shadow-glow-sm" title="Solved 50+ Dynamic Programming questions">
-                      <span className="text-lg">🛡️</span>
-                      <p className="text-[9px] font-bold text-white mt-1">DP Knight</p>
+                    <div className="flex-1 rounded-xl bg-white/[0.01] border border-[#FFA116]/30 p-2.5 text-center transition-all hover:-translate-y-1 hover:shadow-[0_0_20px_rgba(255,161,22,0.2)] holographic floating-card" title="Solved 50+ Dynamic Programming questions">
+                      <span className="text-2xl drop-shadow-[0_0_8px_rgba(255,255,255,0.4)]">🛡️</span>
+                      <p className="text-[9px] font-black text-white mt-1">DP Knight</p>
                     </div>
-                    <div className="flex-1 rounded-lg bg-white/[0.02] border border-purple/35 p-2 text-center transition-all hover:bg-white/[0.04]" title="Solved 30+ Graph questions">
-                      <span className="text-lg">🌀</span>
-                      <p className="text-[9px] font-bold text-white mt-1">Recursion Adept</p>
+                    <div className="flex-1 rounded-xl bg-white/[0.01] border border-purple/40 p-2.5 text-center transition-all hover:-translate-y-1 hover:shadow-[0_0_20px_rgba(139,92,246,0.2)] holographic floating-card" title="Solved 30+ Graph questions">
+                      <span className="text-2xl drop-shadow-[0_0_8px_rgba(255,255,255,0.4)]">🌀</span>
+                      <p className="text-[9px] font-black text-white mt-1">Recursion Adept</p>
                     </div>
-                    <div className="flex-1 rounded-lg bg-white/[0.02] border border-cyan/35 p-2 text-center transition-all hover:bg-white/[0.04]" title="45 Days Active Streak">
-                      <span className="text-lg">🔥</span>
-                      <p className="text-[9px] font-bold text-white mt-1">Active Streak</p>
+                    <div className="flex-1 rounded-xl bg-white/[0.01] border border-cyan/40 p-2.5 text-center transition-all hover:-translate-y-1 hover:shadow-[0_0_20px_rgba(34,211,238,0.2)] holographic floating-card" title="45 Days Active Streak">
+                      <span className="text-2xl drop-shadow-[0_0_8px_rgba(255,255,255,0.4)]">🔥</span>
+                      <p className="text-[9px] font-black text-white mt-1">Active Streak</p>
                     </div>
                   </div>
                 </div>
@@ -951,39 +1016,57 @@ export default function ProfilePage() {
           {/* Work Experience */}
           <motion.div variants={stagger.item}>
             <GlassCard className="h-full">
-              <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center justify-between mb-6">
                 <h3 className="font-heading text-lg font-semibold flex items-center gap-2">
-                  <Star className="h-5 w-5 text-mint" /> Work Experience
+                  <Briefcase className="h-5 w-5 text-mint" /> Work Experience
                 </h3>
                 <button 
                   onClick={() => setIsAddExperienceOpen(true)}
-                  className="flex items-center gap-1 text-[10px] font-semibold text-mint border border-mint/20 bg-mint/5 hover:bg-mint/10 px-2.5 py-1 rounded-xl cursor-pointer"
+                  className="flex items-center gap-1.5 text-xs font-semibold text-mint border border-mint/20 bg-mint/5 hover:bg-mint/10 px-3 py-1.5 rounded-xl cursor-pointer transition-colors"
                 >
-                  <Plus className="h-3 w-3" /> Add Exp
+                  <Plus className="h-3.5 w-3.5" /> Add Exp
                 </button>
               </div>
 
               {profile?.experience && profile.experience.length > 0 ? (
-                <div className="space-y-4">
+                <div className="relative pl-6 space-y-6">
+                  {/* Vertical line indicator */}
+                  <div className="absolute left-[7px] top-1.5 bottom-1.5 w-[1.5px] bg-gradient-to-b from-mint/60 via-accent/30 to-transparent" />
+
                   {profile.experience.map((exp, i) => (
-                    <div key={i} className="group relative bg-white/[0.01] hover:bg-white/[0.02] p-3 rounded-lg border border-white/[0.04] flex items-start gap-3 justify-between">
-                      <div>
-                        <p className="text-sm font-semibold text-white">{exp.role}</p>
-                        <p className="text-xs text-mint font-medium">{exp.company}</p>
-                        <p className="text-[10px] text-slate mt-0.5">{exp.duration}</p>
-                        {exp.description && <p className="text-xs text-slate mt-1.5 leading-relaxed">{exp.description}</p>}
+                    <div key={i} className="group relative pl-4 flex flex-col justify-between transition-all">
+                      {/* Timeline dot */}
+                      <span className="absolute left-[-23px] top-1.5 w-3.5 h-3.5 rounded-full bg-mint border-2 border-base shadow-[0_0_10px_rgba(56,242,181,0.5)] z-10 transition-transform duration-300 group-hover:scale-125" />
+                      
+                      <div className="rounded-xl border border-white/[0.04] bg-white/[0.01] hover:bg-white/[0.03] hover:border-mint/20 transition-all p-3.5">
+                        <div className="flex items-start justify-between gap-2">
+                          <div>
+                            <p className="text-sm font-bold text-white group-hover:text-mint transition-colors">{exp.role}</p>
+                            <p className="text-xs text-mint font-semibold mt-0.5">{exp.company}</p>
+                            <p className="text-[10px] text-slate mt-0.5">{exp.duration}</p>
+                          </div>
+                          <button 
+                            onClick={() => handleDeleteExperience(i)}
+                            className="opacity-0 group-hover:opacity-100 transition-opacity p-1 text-slate hover:text-rose cursor-pointer"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
+                        {exp.description && <p className="text-xs text-slate mt-2 leading-relaxed font-medium">{exp.description}</p>}
                       </div>
-                      <button 
-                        onClick={() => handleDeleteExperience(i)}
-                        className="opacity-0 group-hover:opacity-100 transition-opacity text-slate hover:text-rose p-1 cursor-pointer"
-                      >
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </button>
                     </div>
                   ))}
                 </div>
               ) : (
-                <div className="text-center py-6 text-xs text-slate italic">No experience listed yet.</div>
+                <div className="text-center py-8 rounded-xl border border-dashed border-white/10 bg-white/[0.01]">
+                  <p className="text-xs text-slate italic mb-2">No experience listed yet.</p>
+                  <button 
+                    onClick={() => setIsAddExperienceOpen(true)}
+                    className="mx-auto flex items-center gap-1 text-[10px] font-semibold text-mint cursor-pointer"
+                  >
+                    Add one now
+                  </button>
+                </div>
               )}
             </GlassCard>
           </motion.div>
@@ -991,25 +1074,28 @@ export default function ProfilePage() {
           {/* Licenses & Certifications */}
           <motion.div variants={stagger.item}>
             <GlassCard className="h-full">
-              <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center justify-between mb-6">
                 <h3 className="font-heading text-lg font-semibold flex items-center gap-2">
                   <Award className="h-5 w-5 text-purple" /> Licenses & Certifications
                 </h3>
                 <button 
                   onClick={() => setIsAddLicenseOpen(true)}
-                  className="flex items-center gap-1 text-[10px] font-semibold text-purple border border-purple/20 bg-purple/5 hover:bg-purple/10 px-2.5 py-1 rounded-xl cursor-pointer"
+                  className="flex items-center gap-1.5 text-xs font-semibold text-purple border border-purple/20 bg-purple/5 hover:bg-purple/10 px-3 py-1.5 rounded-xl cursor-pointer transition-colors"
                 >
-                  <Plus className="h-3 w-3" /> Add Cred
+                  <Plus className="h-3.5 w-3.5" /> Add Cred
                 </button>
               </div>
 
               {profile?.licenses && profile.licenses.length > 0 ? (
-                <div className="space-y-3">
+                <div className="space-y-4">
                   {profile.licenses.map((lic, i) => (
-                    <div key={i} className="group relative bg-white/[0.01] hover:bg-white/[0.02] p-3 rounded-lg border border-white/[0.04] flex items-start gap-3 justify-between">
+                    <div key={i} className="group relative rounded-xl border border-white/[0.04] bg-white/[0.01] hover:bg-white/[0.03] hover:border-purple/20 transition-all p-3.5 flex items-start gap-3 justify-between">
                       <div className="min-w-0 flex-1">
-                        <p className="text-sm font-semibold text-white truncate">{lic.name}</p>
-                        <p className="text-xs text-purple font-medium truncate">{lic.issuer}</p>
+                        <div className="flex items-center gap-1.5">
+                          <p className="text-sm font-bold text-white truncate group-hover:text-purple transition-colors">{lic.name}</p>
+                          <span className="text-[10px] text-purple font-semibold bg-purple/10 border border-purple/20 px-1.5 py-0.2 rounded-full flex items-center gap-0.5 select-none shrink-0">✓ Verified</span>
+                        </div>
+                        <p className="text-xs text-purple font-semibold mt-0.5 truncate">{lic.issuer}</p>
                         {lic.issueDate && <p className="text-[10px] text-slate mt-0.5">Issued: {lic.issueDate}</p>}
                         
                         {lic.credentialUrl && (
@@ -1017,15 +1103,15 @@ export default function ProfilePage() {
                             href={lic.credentialUrl} 
                             target="_blank" 
                             rel="noreferrer" 
-                            className="inline-flex items-center gap-1 text-[10px] text-slate hover:text-white mt-1.5 transition-colors"
+                            className="inline-flex items-center gap-1 text-[10px] text-slate-400 hover:text-white mt-2 transition-colors border border-white/5 bg-white/[0.02] hover:bg-white/[0.06] rounded-md px-2 py-0.5"
                           >
-                            <ExternalLink className="h-2.5 w-2.5" /> View Credential
+                            <ExternalLink className="h-2.5 w-2.5 text-accent" /> View Credential
                           </a>
                         )}
                       </div>
                       <button 
                         onClick={() => handleDeleteLicense(i)}
-                        className="opacity-0 group-hover:opacity-100 transition-opacity text-slate hover:text-rose p-1 cursor-pointer"
+                        className="opacity-0 group-hover:opacity-100 transition-opacity p-1 text-slate hover:text-rose cursor-pointer shrink-0"
                       >
                         <Trash2 className="h-3.5 w-3.5" />
                       </button>
@@ -1033,7 +1119,15 @@ export default function ProfilePage() {
                   ))}
                 </div>
               ) : (
-                <div className="text-center py-6 text-xs text-slate italic">No credentials listed yet.</div>
+                <div className="text-center py-8 rounded-xl border border-dashed border-white/10 bg-white/[0.01]">
+                  <p className="text-xs text-slate italic mb-2">No credentials listed yet.</p>
+                  <button 
+                    onClick={() => setIsAddLicenseOpen(true)}
+                    className="mx-auto flex items-center gap-1 text-[10px] font-semibold text-purple cursor-pointer"
+                  >
+                    Add one now
+                  </button>
+                </div>
               )}
             </GlassCard>
           </motion.div>
@@ -1109,100 +1203,100 @@ export default function ProfilePage() {
         <motion.div variants={stagger.item}>
           <GlassCard>
             <h3 className="mb-4 font-heading text-lg font-semibold flex items-center gap-2">
-              <ExternalLink className="h-5 w-5 text-accent" /> Connected Accounts
+              <ExternalLink className="h-5 w-5 text-accent animate-pulse" /> Connected Accounts
             </h3>
             <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-4">
               {/* GitHub */}
-              <div className="flex flex-col justify-between rounded-xl bg-white/[0.02] border border-white/[0.06] p-4 transition-colors hover:bg-white/[0.04]">
+              <div className="flex flex-col justify-between rounded-xl bg-white/[0.01] border border-white/[0.06] p-4 transition-all duration-300 hover:bg-white/[0.03] hover:border-white/20 hover:-translate-y-0.5 hover:shadow-[0_0_15px_rgba(255,255,255,0.05)]">
                 <div className="flex items-center gap-3 mb-4">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#24292e]">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#24292e] shadow-md border border-white/5">
                     <Github className="h-5 w-5 text-white" />
                   </div>
                   <div className="min-w-0">
-                    <p className="text-sm font-semibold truncate">GitHub</p>
-                    <p className="text-xs text-slate truncate">
+                    <p className="text-sm font-bold truncate">GitHub</p>
+                    <p className="text-xs text-slate truncate font-semibold">
                       {profile?.githubUrl ? profile.githubUrl.split("/").pop() : "Not connected"}
                     </p>
                   </div>
                 </div>
                 {profile?.githubUrl ? (
-                  <a href={profile.githubUrl} target="_blank" rel="noreferrer" className="w-full text-center rounded-lg bg-white/[0.06] py-1.5 text-xs font-medium transition-colors hover:bg-white/10 hover:text-white">
+                  <a href={profile.githubUrl} target="_blank" rel="noreferrer" className="w-full text-center rounded-lg bg-white/[0.06] py-1.5 text-xs font-semibold transition-colors hover:bg-white/10 hover:text-white cursor-pointer">
                     View
                   </a>
                 ) : (
-                  <button onClick={() => setIsEditing(true)} className="w-full text-center rounded-lg bg-white/[0.06] py-1.5 text-xs font-medium transition-colors hover:bg-white/10 hover:text-white cursor-pointer">
+                  <button onClick={() => setIsEditing(true)} className="w-full text-center rounded-lg bg-white/[0.06] py-1.5 text-xs font-semibold transition-colors hover:bg-white/10 hover:text-white cursor-pointer">
                     Connect
                   </button>
                 )}
               </div>
 
               {/* LinkedIn */}
-              <div className="flex flex-col justify-between rounded-xl bg-white/[0.02] border border-white/[0.06] p-4 transition-colors hover:bg-white/[0.04]">
+              <div className="flex flex-col justify-between rounded-xl bg-white/[0.01] border border-white/[0.06] p-4 transition-all duration-300 hover:bg-white/[0.03] hover:border-[#0077b5]/30 hover:-translate-y-0.5 hover:shadow-[0_0_15px_rgba(0,119,181,0.08)]">
                 <div className="flex items-center gap-3 mb-4">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#0077b5]">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#0077b5] shadow-md border border-white/5">
                     <Linkedin className="h-5 w-5 text-white" />
                   </div>
                   <div className="min-w-0">
-                    <p className="text-sm font-semibold truncate">LinkedIn</p>
-                    <p className="text-xs text-slate truncate">
+                    <p className="text-sm font-bold truncate">LinkedIn</p>
+                    <p className="text-xs text-slate truncate font-semibold">
                       {profile?.linkedinUrl ? profile.linkedinUrl.split("/").pop() : "Not connected"}
                     </p>
                   </div>
                 </div>
                 {profile?.linkedinUrl ? (
-                  <a href={profile.linkedinUrl} target="_blank" rel="noreferrer" className="w-full text-center rounded-lg bg-mint/10 py-1.5 text-xs font-medium text-mint transition-colors hover:bg-mint/20">
+                  <a href={profile.linkedinUrl} target="_blank" rel="noreferrer" className="w-full text-center rounded-lg bg-mint/10 py-1.5 text-xs font-semibold text-mint transition-colors hover:bg-mint/20">
                     View
                   </a>
                 ) : (
-                  <button onClick={() => setIsEditing(true)} className="w-full text-center rounded-lg bg-white/[0.06] py-1.5 text-xs font-medium transition-colors hover:bg-white/10 hover:text-white cursor-pointer">
+                  <button onClick={() => setIsEditing(true)} className="w-full text-center rounded-lg bg-white/[0.06] py-1.5 text-xs font-semibold transition-colors hover:bg-white/10 hover:text-white cursor-pointer">
                     Connect
                   </button>
                 )}
               </div>
 
               {/* LeetCode (Brand: Orange #FFA116) */}
-              <div className="flex flex-col justify-between rounded-xl bg-white/[0.02] border border-white/[0.06] p-4 transition-colors hover:bg-white/[0.04]">
+              <div className="flex flex-col justify-between rounded-xl bg-white/[0.01] border border-white/[0.06] p-4 transition-all duration-300 hover:bg-white/[0.03] hover:border-[#FFA116]/30 hover:-translate-y-0.5 hover:shadow-[0_0_15px_rgba(255,161,22,0.08)]">
                 <div className="flex items-center gap-3 mb-4">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#2c2c2c] border border-[#FFA116]/30">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#2c2c2c] border border-[#FFA116]/30 shadow-md">
                     <span className="text-sm font-bold text-[#FFA116]">LC</span>
                   </div>
                   <div className="min-w-0">
-                    <p className="text-sm font-semibold truncate text-[#FFA116]">LeetCode</p>
-                    <p className="text-xs text-slate truncate">
+                    <p className="text-sm font-bold truncate text-[#FFA116]">LeetCode</p>
+                    <p className="text-xs text-slate truncate font-semibold">
                       {profile?.leetcodeUrl ? "Connected" : "Not connected"}
                     </p>
                   </div>
                 </div>
                 {profile?.leetcodeUrl ? (
-                  <a href={profile.leetcodeUrl} target="_blank" rel="noreferrer" className="w-full text-center rounded-lg bg-[#FFA116]/10 py-1.5 text-xs font-medium text-[#FFA116] transition-colors hover:bg-[#FFA116]/20">
+                  <a href={profile.leetcodeUrl} target="_blank" rel="noreferrer" className="w-full text-center rounded-lg bg-[#FFA116]/10 py-1.5 text-xs font-semibold text-[#FFA116] transition-colors hover:bg-[#FFA116]/20">
                     View Profile
                   </a>
                 ) : (
-                  <button onClick={() => setIsEditing(true)} className="w-full text-center rounded-lg bg-white/[0.06] py-1.5 text-xs font-medium transition-colors hover:bg-white/10 hover:text-white cursor-pointer">
+                  <button onClick={() => setIsEditing(true)} className="w-full text-center rounded-lg bg-white/[0.06] py-1.5 text-xs font-semibold transition-colors hover:bg-white/10 hover:text-white cursor-pointer">
                     Connect
                   </button>
                 )}
               </div>
 
               {/* ORCID (Brand: Green #A6CE39) */}
-              <div className="flex flex-col justify-between rounded-xl bg-white/[0.02] border border-white/[0.06] p-4 transition-colors hover:bg-white/[0.04]">
+              <div className="flex flex-col justify-between rounded-xl bg-white/[0.01] border border-white/[0.06] p-4 transition-all duration-300 hover:bg-white/[0.03] hover:border-[#A6CE39]/30 hover:-translate-y-0.5 hover:shadow-[0_0_15px_rgba(166,206,57,0.08)]">
                 <div className="flex items-center gap-3 mb-4">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#12121A] border border-[#A6CE39]/30">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#12121A] border border-[#A6CE39]/30 shadow-md">
                     <span className="text-sm font-bold text-[#A6CE39]">iD</span>
                   </div>
                   <div className="min-w-0">
-                    <p className="text-sm font-semibold truncate text-[#A6CE39]">ORCID iD</p>
-                    <p className="text-xs text-slate truncate">
+                    <p className="text-sm font-bold truncate text-[#A6CE39]">ORCID iD</p>
+                    <p className="text-xs text-slate truncate font-semibold">
                       {profile?.orcidUrl ? "Connected" : "Not connected"}
                     </p>
                   </div>
                 </div>
                 {profile?.orcidUrl ? (
-                  <a href={profile.orcidUrl} target="_blank" rel="noreferrer" className="w-full text-center rounded-lg bg-[#A6CE39]/10 py-1.5 text-xs font-medium text-[#A6CE39] transition-colors hover:bg-[#A6CE39]/20">
+                  <a href={profile.orcidUrl} target="_blank" rel="noreferrer" className="w-full text-center rounded-lg bg-[#A6CE39]/10 py-1.5 text-xs font-semibold text-[#A6CE39] transition-colors hover:bg-[#A6CE39]/20">
                     View Research
                   </a>
                 ) : (
-                  <button onClick={() => setIsEditing(true)} className="w-full text-center rounded-lg bg-white/[0.06] py-1.5 text-xs font-medium transition-colors hover:bg-white/10 hover:text-white cursor-pointer">
+                  <button onClick={() => setIsEditing(true)} className="w-full text-center rounded-lg bg-white/[0.06] py-1.5 text-xs font-semibold transition-colors hover:bg-white/10 hover:text-white cursor-pointer">
                     Connect
                   </button>
                 )}
