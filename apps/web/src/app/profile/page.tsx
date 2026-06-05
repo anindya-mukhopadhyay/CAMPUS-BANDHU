@@ -1712,38 +1712,7 @@ export default function ProfilePage() {
           >
             📤 Upload New Photo
           </button>
-          <button
-            onClick={() => {
-              setAvatarMenuOpen(false);
-              setEditData({
-                fullName: profile?.fullName || "",
-                email: profile?.email || user?.email || "youanindya1@gmail.com",
-                department: profile?.department || "",
-                graduationYear: profile?.graduationYear || 2025,
-                bio: profile?.bio || "Passionate about AI and building decentralized systems.",
-                githubUrl: profile?.githubUrl || "",
-                linkedinUrl: profile?.linkedinUrl || "",
-                leetcodeUrl: profile?.leetcodeUrl || "",
-                orcidUrl: profile?.orcidUrl || "",
-                resumeUrl: profile?.resumeUrl || "",
-                skills: profile?.skills || [],
-                interests: profile?.interests?.join(", ") || "",
-                collegeName: profile?.collegeName || "NSUT, New Delhi",
-                avatarUrl: profile?.avatarUrl || "",
-                coverPhotoUrl: profile?.coverPhotoUrl || "",
-                avatarZoom: profile?.avatarZoom || 1,
-                avatarX: profile?.avatarX || 0,
-                avatarY: profile?.avatarY || 0,
-                coverZoom: profile?.coverZoom || 1,
-                coverY: profile?.coverY || 50,
-                gender: profile?.gender || "Undeclared"
-              });
-              setIsEditing(true);
-            }}
-            className="w-full text-left rounded-xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 px-4 py-3 text-sm font-medium text-white transition-all flex items-center gap-3 cursor-pointer"
-          >
-            ⚙️ Adjust Position & Zoom
-          </button>
+
           {profile?.avatarUrl && (
             <button
               onClick={async () => {
