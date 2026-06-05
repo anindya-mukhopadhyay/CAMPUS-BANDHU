@@ -124,9 +124,19 @@ export async function login(request: Request, response: Response) {
         status
       });
       logger.info({ uid: userId, email, role }, "Restored missing user profile successfully");
-    } catch (err) {
-      logger.error({ uid: userId, err }, "Failed to auto-restore missing user profile");
-      throw new HttpError(StatusCodes.NOT_FOUND, "User profile not found and could not be restored");
+    } catch (err: any) {
+      if (err.code === 11000) {
+        userDoc = await UserModel.findOne({ uid: userId });
+        if (userDoc) {
+          logger.info({ uid: userId }, "Recovered from auto-restore race condition");
+        } else {
+          logger.error({ uid: userId, err }, "Failed to auto-restore missing user profile after race condition");
+          throw new HttpError(StatusCodes.NOT_FOUND, "User profile not found and could not be restored");
+        }
+      } else {
+        logger.error({ uid: userId, err }, "Failed to auto-restore missing user profile");
+        throw new HttpError(StatusCodes.NOT_FOUND, "User profile not found and could not be restored");
+      }
     }
   }
 
