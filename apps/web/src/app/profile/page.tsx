@@ -1372,7 +1372,7 @@ export default function ProfilePage() {
       </motion.div>
 
       {/* Edit Profile Modal */}
-      <Modal open={isEditing} onClose={() => setIsEditing(false)} title="Edit Profile Details">
+      <Modal open={isEditing} onClose={() => setIsEditing(false)} title="Edit Profile Details" variant="hacker" size="lg">
         <div className="space-y-4 max-h-[70vh] overflow-y-auto px-1">
           <div className="grid grid-cols-2 gap-4">
             <Input 
@@ -1412,7 +1412,7 @@ export default function ProfilePage() {
               <select
                 value={editData.gender}
                 onChange={(e) => setEditData({ ...editData, gender: e.target.value })}
-                className="h-10 w-full rounded-xl border border-white/10 bg-[#12121A] px-3 text-sm text-white placeholder:text-subtle transition-colors focus:border-accent/50 focus:outline-none"
+                className="h-10 w-full rounded-xl border border-white/10 bg-[#070b15]/75 px-3 text-xs text-white placeholder:text-subtle transition-colors focus:border-accent/50 focus:outline-none font-mono"
               >
                 <option value="Undeclared">Undeclared</option>
                 <option value="Male">Male</option>
@@ -1544,7 +1544,7 @@ export default function ProfilePage() {
             <textarea
               value={editData.bio}
               onChange={(e) => setEditData({ ...editData, bio: e.target.value })}
-              className="w-full rounded-xl border border-white/[0.06] bg-[#12121A] p-3 text-sm text-white placeholder:text-subtle focus:border-accent/50 focus:outline-none min-h-[80px]"
+              className="w-full rounded-xl border border-white/[0.06] bg-[#070b15]/75 p-3 text-xs text-white placeholder:text-subtle focus:border-accent/50 focus:outline-none min-h-[80px] font-mono"
               placeholder="Tell us about yourself..."
             />
           </div>
@@ -1638,15 +1638,15 @@ export default function ProfilePage() {
 
           <button 
             onClick={handleSave}
-            className="w-full mt-4 rounded-xl bg-gradient-to-r from-mint to-accent py-3 text-sm font-semibold text-white shadow-[0_0_20px_rgba(56,242,181,0.2)] transition-shadow hover:shadow-[0_0_30px_rgba(56,242,181,0.3)] cursor-pointer"
+            className="w-full mt-4 rounded-xl bg-gradient-to-r from-mint to-accent py-3 text-xs font-bold text-white shadow-[0_0_20px_rgba(56,242,181,0.2)] transition-all hover:scale-[1.01] hover:shadow-[0_0_30px_rgba(56,242,181,0.35)] cursor-pointer select-none active:scale-[0.99] font-mono"
           >
-            Save Changes to Database
+            EXECUTE: Save Changes to Database
           </button>
         </div>
       </Modal>
 
       {/* Add Project Modal */}
-      <Modal open={isAddProjectOpen} onClose={() => setIsAddProjectOpen(false)} title="Add Project Showcase">
+      <Modal open={isAddProjectOpen} onClose={() => setIsAddProjectOpen(false)} title="Add Project Showcase" variant="hacker" size="md">
         <form onSubmit={handleAddProject} className="space-y-4 p-1">
           <Input 
             label="Project Title" 
@@ -1660,7 +1660,7 @@ export default function ProfilePage() {
             <textarea
               value={newProject.description}
               onChange={(e) => setNewProject({ ...newProject, description: e.target.value })}
-              className="w-full rounded-xl border border-white/[0.06] bg-[#12121A] p-3 text-sm text-white placeholder:text-subtle focus:border-accent/50 focus:outline-none min-h-[80px]"
+              className="w-full rounded-xl border border-white/[0.06] bg-[#070b15]/75 p-3 text-xs text-white placeholder:text-subtle focus:border-accent/50 focus:outline-none min-h-[80px] font-mono"
               placeholder="Explain what your project does..."
               required
             />
@@ -1672,7 +1672,7 @@ export default function ProfilePage() {
               <button
                 type="button"
                 onClick={() => document.getElementById("project-photo-modal")?.click()}
-                className="flex w-full items-center justify-center gap-2 rounded-xl bg-white/[0.04] border border-white/10 px-3 py-2 text-xs font-medium text-white hover:bg-white/[0.08] hover:border-accent/30 transition-all cursor-pointer"
+                className="flex w-full items-center justify-center gap-2 rounded-xl bg-white/[0.02] border border-white/10 px-3 py-2 text-xs font-bold text-white hover:bg-white/[0.06] hover:border-accent/40 hover:text-accent transition-all cursor-pointer font-mono"
               >
                 <Upload className="h-3.5 w-3.5 text-accent" /> Upload Project Banner
               </button>
@@ -1724,15 +1724,15 @@ export default function ProfilePage() {
 
           <button
             type="submit"
-            className="w-full mt-4 rounded-xl bg-gradient-to-r from-accent to-purple py-3 text-sm font-semibold text-white cursor-pointer shadow-glow-sm"
+            className="w-full mt-4 rounded-xl bg-gradient-to-r from-accent to-purple py-3 text-xs font-bold text-white cursor-pointer shadow-glow-sm hover:scale-[1.01] transition-all active:scale-[0.99] select-none font-mono"
           >
-            Add to Profile
+            EXECUTE: Add Project
           </button>
         </form>
       </Modal>
 
       {/* Add Experience Modal */}
-      <Modal open={isAddExperienceOpen} onClose={() => setIsAddExperienceOpen(false)} title="Add Work Experience">
+      <Modal open={isAddExperienceOpen} onClose={() => setIsAddExperienceOpen(false)} title="Add Work Experience" variant="hacker" size="md">
         <form onSubmit={handleAddExperience} className="space-y-4 p-1">
           <Input 
             label="Job / Internship Role" 
@@ -1760,21 +1760,21 @@ export default function ProfilePage() {
             <textarea
               value={newExperience.description}
               onChange={(e) => setNewExperience({ ...newExperience, description: e.target.value })}
-              className="w-full rounded-xl border border-white/[0.06] bg-[#12121A] p-3 text-sm text-white placeholder:text-subtle focus:border-accent/50 focus:outline-none min-h-[80px]"
+              className="w-full rounded-xl border border-white/[0.06] bg-[#070b15]/75 p-3 text-xs text-white placeholder:text-subtle focus:border-accent/50 focus:outline-none min-h-[80px] font-mono"
               placeholder="Highlight your key achievements and contributions..."
             />
           </div>
           <button
             type="submit"
-            className="w-full mt-4 rounded-xl bg-gradient-to-r from-mint to-electric py-3 text-sm font-semibold text-white cursor-pointer shadow-glow-sm"
+            className="w-full mt-4 rounded-xl bg-gradient-to-r from-mint to-electric py-3 text-xs font-bold text-white cursor-pointer shadow-glow-sm hover:scale-[1.01] transition-all active:scale-[0.99] select-none font-mono"
           >
-            Add Experience
+            EXECUTE: Add Experience
           </button>
         </form>
       </Modal>
 
       {/* Add License Modal */}
-      <Modal open={isAddLicenseOpen} onClose={() => setIsAddLicenseOpen(false)} title="Add License / Certification">
+      <Modal open={isAddLicenseOpen} onClose={() => setIsAddLicenseOpen(false)} title="Add License / Certification" variant="hacker" size="md">
         <form onSubmit={handleAddLicense} className="space-y-4 p-1">
           <Input 
             label="Certification Name" 
@@ -1804,15 +1804,15 @@ export default function ProfilePage() {
           />
           <button
             type="submit"
-            className="w-full mt-4 rounded-xl bg-gradient-to-r from-purple to-electric py-3 text-sm font-semibold text-white cursor-pointer shadow-glow-sm"
+            className="w-full mt-4 rounded-xl bg-gradient-to-r from-purple to-electric py-3 text-xs font-bold text-white cursor-pointer shadow-glow-sm hover:scale-[1.01] transition-all active:scale-[0.99] select-none font-mono"
           >
-            Add Certificate
+            EXECUTE: Add Certificate
           </button>
         </form>
       </Modal>
 
       {/* Avatar Options Modal */}
-      <Modal open={avatarMenuOpen} onClose={() => setAvatarMenuOpen(false)} title="Profile Picture Options">
+      <Modal open={avatarMenuOpen} onClose={() => setAvatarMenuOpen(false)} title="Profile Picture Options" variant="hacker" size="sm">
         <div className="space-y-3 p-1">
           {profile?.avatarUrl && (
             <button
@@ -1820,9 +1820,9 @@ export default function ProfilePage() {
                 setAvatarMenuOpen(false);
                 setLightboxImage({ src: profile.avatarUrl!, title: "Profile Picture" });
               }}
-              className="w-full text-left rounded-xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 px-4 py-3 text-sm font-medium text-white transition-all flex items-center gap-3 cursor-pointer"
+              className="w-full text-left rounded-xl bg-white/[0.02] hover:bg-white/[0.06] border border-white/10 hover:border-accent/40 hover:text-accent px-4 py-3.5 text-xs font-bold text-white transition-all flex items-center gap-3 cursor-pointer select-none font-mono"
             >
-              👁️ View Full Photo
+              &gt; 👁️ VIEW_FULL_IMAGE
             </button>
           )}
           <button
@@ -1830,9 +1830,9 @@ export default function ProfilePage() {
               setAvatarMenuOpen(false);
               document.getElementById("avatar-file-input-header")?.click();
             }}
-            className="w-full text-left rounded-xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 px-4 py-3 text-sm font-medium text-white transition-all flex items-center gap-3 cursor-pointer"
+            className="w-full text-left rounded-xl bg-white/[0.02] hover:bg-white/[0.06] border border-white/10 hover:border-accent/40 hover:text-accent px-4 py-3.5 text-xs font-bold text-white transition-all flex items-center gap-3 cursor-pointer select-none font-mono"
           >
-            📤 Upload New Photo
+            &gt; 📤 UPLOAD_NEW_IMAGE
           </button>
 
           {profile?.avatarUrl && (
@@ -1843,16 +1843,16 @@ export default function ProfilePage() {
                   await updateProfile({ avatarUrl: "" });
                 }
               }}
-              className="w-full text-left rounded-xl bg-rose/10 hover:bg-rose/20 border border-rose/30 px-4 py-3 text-sm font-medium text-rose transition-all flex items-center gap-3 cursor-pointer"
+              className="w-full text-left rounded-xl bg-rose-950/10 hover:bg-rose-950/20 border border-rose-500/20 hover:border-rose-500/40 px-4 py-3.5 text-xs font-bold text-rose-400 transition-all flex items-center gap-3 cursor-pointer select-none font-mono"
             >
-              ❌ Remove Photo
+              &gt; ❌ DELETE_CURRENT_IMAGE
             </button>
           )}
         </div>
       </Modal>
 
       {/* Cover Options Modal */}
-      <Modal open={coverMenuOpen} onClose={() => setCoverMenuOpen(false)} title="Cover Photo Options">
+      <Modal open={coverMenuOpen} onClose={() => setCoverMenuOpen(false)} title="Cover Photo Options" variant="hacker" size="sm">
         <div className="space-y-3 p-1">
           {profile?.coverPhotoUrl && (
             <button
@@ -1860,9 +1860,9 @@ export default function ProfilePage() {
                 setCoverMenuOpen(false);
                 setLightboxImage({ src: profile.coverPhotoUrl!, title: "Cover Photo" });
               }}
-              className="w-full text-left rounded-xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 px-4 py-3 text-sm font-medium text-white transition-all flex items-center gap-3 cursor-pointer"
+              className="w-full text-left rounded-xl bg-white/[0.02] hover:bg-white/[0.06] border border-white/10 hover:border-accent/40 hover:text-accent px-4 py-3.5 text-xs font-bold text-white transition-all flex items-center gap-3 cursor-pointer select-none font-mono"
             >
-              👁️ View Full Banner
+              &gt; 👁️ VIEW_FULL_BANNER
             </button>
           )}
           <button
@@ -1870,18 +1870,18 @@ export default function ProfilePage() {
               setCoverMenuOpen(false);
               document.getElementById("cover-file-input-header")?.click();
             }}
-            className="w-full text-left rounded-xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 px-4 py-3 text-sm font-medium text-white transition-all flex items-center gap-3 cursor-pointer"
+            className="w-full text-left rounded-xl bg-white/[0.02] hover:bg-white/[0.06] border border-white/10 hover:border-accent/40 hover:text-accent px-4 py-3.5 text-xs font-bold text-white transition-all flex items-center gap-3 cursor-pointer select-none font-mono"
           >
-            📤 Upload New Cover
+            &gt; 📤 UPLOAD_NEW_BANNER
           </button>
           <button
             onClick={() => {
               setCoverMenuOpen(false);
               setIsRepositioningCover(true);
             }}
-            className="w-full text-left rounded-xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 px-4 py-3 text-sm font-medium text-white transition-all flex items-center gap-3 cursor-pointer"
+            className="w-full text-left rounded-xl bg-white/[0.02] hover:bg-white/[0.06] border border-white/10 hover:border-accent/40 hover:text-accent px-4 py-3.5 text-xs font-bold text-white transition-all flex items-center gap-3 cursor-pointer select-none font-mono"
           >
-            ⚙️ Drag to Reposition
+            &gt; ⚙️ REPOSITION_BANNER
           </button>
           {profile?.coverPhotoUrl && (
             <button
@@ -1891,9 +1891,9 @@ export default function ProfilePage() {
                   await updateProfile({ coverPhotoUrl: "" });
                 }
               }}
-              className="w-full text-left rounded-xl bg-rose/10 hover:bg-rose/20 border border-rose/30 px-4 py-3 text-sm font-medium text-rose transition-all flex items-center gap-3 cursor-pointer"
+              className="w-full text-left rounded-xl bg-rose-950/10 hover:bg-rose-950/20 border border-rose-500/20 hover:border-rose-500/40 px-4 py-3.5 text-xs font-bold text-rose-400 transition-all flex items-center gap-3 cursor-pointer select-none font-mono"
             >
-              ❌ Remove Cover
+              &gt; ❌ DELETE_CURRENT_BANNER
             </button>
           )}
         </div>
