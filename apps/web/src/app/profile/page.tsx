@@ -1327,58 +1327,7 @@ export default function ProfilePage() {
           {/* Image Adjustments */}
           <div className="border-t border-white/[0.06] pt-3">
             <h4 className="text-xs font-semibold text-accent uppercase tracking-wider mb-3">Image Alignment & Adjustments</h4>
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <div className="rounded-xl bg-white/[0.02] border border-white/[0.04] p-3 space-y-3">
-                <p className="text-xs font-semibold text-white">Profile Photo Controls</p>
-                <div>
-                  <div className="flex justify-between text-[10px] text-slate mb-1">
-                    <span>Zoom Scale</span>
-                    <span>{Math.round(editData.avatarZoom * 100)}%</span>
-                  </div>
-                  <input
-                    type="range"
-                    min="1"
-                    max="2.5"
-                    step="0.05"
-                    value={editData.avatarZoom}
-                    onChange={(e) => setEditData({ ...editData, avatarZoom: Number(e.target.value) })}
-                    className="w-full accent-mint cursor-pointer"
-                  />
-                </div>
-                <div className="grid grid-cols-2 gap-2">
-                  <div>
-                    <div className="flex justify-between text-[10px] text-slate mb-1">
-                      <span>Horizontal (X)</span>
-                      <span>{editData.avatarX}px</span>
-                    </div>
-                    <input
-                      type="range"
-                      min="-50"
-                      max="50"
-                      step="1"
-                      value={editData.avatarX}
-                      onChange={(e) => setEditData({ ...editData, avatarX: Number(e.target.value) })}
-                      className="w-full accent-mint cursor-pointer"
-                    />
-                  </div>
-                  <div>
-                    <div className="flex justify-between text-[10px] text-slate mb-1">
-                      <span>Vertical (Y)</span>
-                      <span>{editData.avatarY}px</span>
-                    </div>
-                    <input
-                      type="range"
-                      min="-50"
-                      max="50"
-                      step="1"
-                      value={editData.avatarY}
-                      onChange={(e) => setEditData({ ...editData, avatarY: Number(e.target.value) })}
-                      className="w-full accent-mint cursor-pointer"
-                    />
-                  </div>
-                </div>
-              </div>
-
+            <div className="max-w-md">
               <div className="rounded-xl bg-white/[0.02] border border-white/[0.04] p-3 space-y-3">
                 <p className="text-xs font-semibold text-white">Cover Photo Controls</p>
                 <div>
