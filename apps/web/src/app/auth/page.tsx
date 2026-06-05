@@ -8,7 +8,7 @@ import { Mail, Lock, User, ArrowRight, Eye, EyeOff, Sparkles } from "lucide-reac
 
 import { loginWithEmail, loginWithGoogle, logout } from "@/lib/firebase/auth";
 import { useAuthStore } from "@/lib/stores/useAuthStore";
-import { authService, userService } from "@/services";
+import { authService } from "@/services";
 
 type AuthMode = "login" | "register";
 
