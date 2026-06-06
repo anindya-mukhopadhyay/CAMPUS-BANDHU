@@ -44,7 +44,7 @@ const stagger = {
 // Reusable macOS Terminal Console Wrapper
 const ConsoleWindow = ({ title, children, className }: { title: string, children: React.ReactNode, className?: string }) => {
   return (
-    <div className={cn("rounded-3xl border border-white/[0.08] bg-[#070b15]/75 backdrop-blur-md shadow-2xl overflow-hidden text-left flex flex-col transition-all duration-300 hover:border-accent/40 hover:shadow-[0_0_30px_rgba(0,212,255,0.08)]", className)}>
+    <div className={cn("rounded-3xl border border-white/[0.08] bg-[#070b15]/75 backdrop-blur-md shadow-2xl overflow-hidden text-left flex flex-col transition-all duration-300 hover:border-accent/40 hover:shadow-[0_0_30px_rgba(0,212,255,0.08)] will-change-transform", className)}>
       {/* Console Title Header */}
       <div className="flex items-center justify-between px-5 py-3.5 bg-white/[0.02] border-b border-white/[0.06] select-none shrink-0">
         <div className="flex gap-1.5">
@@ -1241,7 +1241,7 @@ export default function ProfilePage() {
       <motion.div variants={stagger.container} initial="initial" animate="animate" className="space-y-6">
         
         {/* Futuristic Cyber Bento Grid Layout */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 items-stretch">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 items-stretch">
           
           {/* Bento Box 1: Large Hero Block (Col-span 2, Row-span 2 on desktop) */}
           <div className="md:col-span-2 lg:col-span-2 flex flex-col">
@@ -1579,121 +1579,8 @@ export default function ProfilePage() {
             </ConsoleWindow>
           </div>
 
-          {/* Bento Box 3: GitHub Contributions (Full-Width, Col-span 3) */}
-          {githubUsername && (
-            <div className="md:col-span-2 lg:col-span-3 flex flex-col">
-              <ConsoleWindow title="[github] - contributions.log" className="h-full flex flex-col justify-between">
-                <div>
-                  <h3 className="mb-1 font-heading text-base font-bold flex items-center gap-2 text-white">
-                    <Github className="h-5 w-5 text-purple animate-spin-slow" /> GitHub Activity Tracker
-                  </h3>
-                  <p className="text-xs text-slate mb-4 font-semibold">Repository synchronization commits calendar log.</p>
-                  
-                  <div className="overflow-hidden rounded-2xl border border-white/[0.06] bg-white/[0.01] p-4 flex flex-col md:flex-row gap-4 items-center justify-between">
-                    <div className="w-full md:w-auto min-w-0 flex-1 overflow-x-auto scrollbar-none">
-                      <img 
-                        src={`https://ghchart.rshah.org/8b5cf6/${githubUsername}`} 
-                        alt="GitHub Contribution Calendar" 
-                        className="h-28 object-contain filter hover:brightness-110 transition-all duration-300 mx-auto"
-                      />
-                    </div>
-
-                    <div className="flex gap-4 self-stretch md:self-auto justify-around shrink-0 md:pl-5 md:border-l border-white/[0.06]">
-                      <div className="text-center px-4 font-mono">
-                        <p className="font-heading text-2xl font-black text-mint">{currentStreak}</p>
-                        <p className="text-[9px] text-slate font-bold uppercase tracking-widest mt-0.5">Commit Streak</p>
-                      </div>
-                      <div className="text-center px-4 font-mono">
-                        <p className="font-heading text-2xl font-black text-accent">{totalCommits}</p>
-                        <p className="text-[9px] text-slate font-bold uppercase tracking-widest mt-0.5">Total Commits</p>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Sync repositories horizontal list */}
-                  <div className="mt-5 border-t border-white/[0.06] pt-4">
-                    <p className="text-[10px] font-bold text-slate uppercase tracking-wider font-mono mb-3">Sync Directory Tree</p>
-                    <div className="flex gap-4 overflow-x-auto pb-2 snap-x snap-mandatory scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
-                      {loadingRepos ? (
-                        Array.from({ length: 4 }).map((_, idx) => (
-                          <div 
-                            key={idx} 
-                            className="min-w-[260px] max-w-[260px] rounded-xl border border-white/[0.04] bg-white/[0.01] p-3 snap-align-start shrink-0 flex flex-col justify-between animate-pulse animate-duration-750"
-                          >
-                            <div>
-                              <div className="flex items-center justify-between gap-2 mb-3">
-                                <div className="h-3 w-28 bg-white/10 rounded" />
-                                <div className="h-3 w-12 bg-white/5 rounded" />
-                              </div>
-                              <div className="space-y-2 mb-4">
-                                <div className="h-2 w-full bg-white/5 rounded" />
-                                <div className="h-2 w-3/4 bg-white/5 rounded" />
-                              </div>
-                            </div>
-                            <div className="flex items-center justify-between border-t border-white/[0.04] pt-2">
-                              <div className="h-2.5 w-16 bg-white/10 rounded" />
-                              <div className="h-2.5 w-20 bg-white/5 rounded" />
-                            </div>
-                          </div>
-                        ))
-                      ) : (
-                        (repositories.length > 0 ? repositories : [
-                          { name: "campus-bandhu-os", description: "Smart Campus Operating System with AI Matching, real-time sync, and glassmorphic dashboards.", language: "TypeScript", forks: 12, stars: 128, tag: "Highest Fork", html_url: `https://github.com/${githubUsername}/campus-bandhu-os` },
-                          { name: "ai-matching-radar", description: "Skills compatibility matching engine using cosine similarity calculations and fuzzy match logic.", language: "Python", forks: 8, stars: 242, tag: "Most Star", html_url: `https://github.com/${githubUsername}/ai-matching-radar` },
-                          { name: "web3-buildathon-contracts", description: "Smart contracts and decentralized verification logic for NFT credential distribution.", language: "Solidity", forks: 4, stars: 38, tag: "New", html_url: `https://github.com/${githubUsername}/web3-buildathon-contracts` },
-                          { name: "leetcode-stats-api", description: "Serverless endpoints to fetch, compile, and visual solve parameters for competitive coding profiles.", language: "TypeScript", forks: 2, stars: 15, tag: "", html_url: `https://github.com/${githubUsername}/leetcode-stats-api` },
-                        ]).map((repo) => (
-                          <a 
-                            key={repo.name} 
-                            href={repo.html_url || "#"}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="min-w-[260px] max-w-[260px] rounded-2xl border border-white/[0.04] bg-white/[0.01] p-4 hover:bg-white/[0.03] hover:border-purple/35 transition-all snap-align-start shrink-0 flex flex-col justify-between group/repo cursor-pointer shadow-md"
-                          >
-                            <div>
-                              <div className="flex items-center justify-between gap-2 mb-2">
-                                <span className="font-mono text-xs font-semibold text-white group-hover/repo:text-accent transition-colors truncate max-w-[150px]">{repo.name}</span>
-                                {repo.tag && (
-                                  <span className={cn(
-                                    "text-[8px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wider",
-                                    repo.tag === "New" && "bg-electric/10 text-electric border border-electric/20",
-                                    repo.tag === "Highest Fork" && "bg-purple/10 text-purple border border-purple/20 shadow-glow-xs animate-pulse",
-                                    repo.tag === "Most Star" && "bg-mint/10 text-mint border border-mint/20 shadow-glow-xs"
-                                  )}>
-                                    {repo.tag}
-                                  </span>
-                                )}
-                              </div>
-                              <p className="text-[10px] text-slate leading-relaxed line-clamp-2 mb-3">{repo.description}</p>
-                            </div>
-                            
-                            <div className="flex items-center justify-between text-[9px] text-slate border-t border-white/[0.04] pt-2 mt-2 font-mono">
-                              <span className="flex items-center gap-1.5 font-bold">
-                                <span className={cn(
-                                  "w-1.5 h-1.5 rounded-full",
-                                  repo.language === "TypeScript" && "bg-[#3178c6]",
-                                  repo.language === "Python" && "bg-[#3572a5]",
-                                  repo.language === "Solidity" && "bg-[#f18b11]",
-                                  !["TypeScript", "Python", "Solidity"].includes(repo.language) && "bg-accent"
-                                )} /> {repo.language}
-                              </span>
-                              <span className="flex items-center gap-3 font-semibold">
-                                <span>🍴 {repo.forks}</span>
-                                <span>⭐ {repo.stars}</span>
-                              </span>
-                            </div>
-                          </a>
-                        ))
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </ConsoleWindow>
-            </div>
-          )}
-
-          {/* Bento Box 4: Creations Directory Showcase (Col-span 2) */}
-          <div className="md:col-span-2 lg:col-span-2 flex flex-col">
+          {/* Bento Box 2.5: Projects Directory Showcase (Col-span 2, beside Player Status) */}
+          <div className="md:col-span-1 lg:col-span-2 flex flex-col min-w-0">
             <ConsoleWindow title="[json] - creations.json" className="h-full flex flex-col justify-between">
               <div>
                 <div className="flex items-center justify-between mb-4 shrink-0">
@@ -1815,9 +1702,124 @@ export default function ProfilePage() {
             </ConsoleWindow>
           </div>
 
+          {/* Bento Box 3: GitHub Contributions (Full-Width, Col-span 3) */}
+          {githubUsername && (
+            <div className="md:col-span-2 lg:col-span-3 flex flex-col">
+              <ConsoleWindow title="[github] - contributions.log" className="h-full flex flex-col justify-between">
+                <div>
+                  <h3 className="mb-1 font-heading text-base font-bold flex items-center gap-2 text-white">
+                    <Github className="h-5 w-5 text-purple animate-spin-slow" /> GitHub Activity Tracker
+                  </h3>
+                  <p className="text-xs text-slate mb-4 font-semibold">Repository synchronization commits calendar log.</p>
+                  
+                  <div className="overflow-hidden rounded-2xl border border-white/[0.06] bg-white/[0.01] p-4 flex flex-col md:flex-row gap-4 items-center justify-between">
+                    <div className="w-full md:w-auto min-w-0 flex-1 overflow-x-auto scrollbar-none">
+                      <img 
+                        src={`https://ghchart.rshah.org/8b5cf6/${githubUsername}`} 
+                        alt="GitHub Contribution Calendar" 
+                        loading="lazy"
+                        decoding="async"
+                        className="h-28 object-contain filter hover:brightness-110 transition-all duration-300 mx-auto"
+                      />
+                    </div>
+
+                    <div className="flex gap-4 self-stretch md:self-auto justify-around shrink-0 md:pl-5 md:border-l border-white/[0.06]">
+                      <div className="text-center px-4 font-mono">
+                        <p className="font-heading text-2xl font-black text-mint">{currentStreak}</p>
+                        <p className="text-[9px] text-slate font-bold uppercase tracking-widest mt-0.5">Commit Streak</p>
+                      </div>
+                      <div className="text-center px-4 font-mono">
+                        <p className="font-heading text-2xl font-black text-accent">{totalCommits}</p>
+                        <p className="text-[9px] text-slate font-bold uppercase tracking-widest mt-0.5">Total Commits</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Sync repositories horizontal list */}
+                  <div className="mt-5 border-t border-white/[0.06] pt-4">
+                    <p className="text-[10px] font-bold text-slate uppercase tracking-wider font-mono mb-3">Sync Directory Tree</p>
+                    <div className="flex gap-4 overflow-x-auto pb-2 snap-x snap-mandatory scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
+                      {loadingRepos ? (
+                        Array.from({ length: 4 }).map((_, idx) => (
+                          <div 
+                            key={idx} 
+                            className="min-w-[260px] max-w-[260px] rounded-xl border border-white/[0.04] bg-white/[0.01] p-3 snap-align-start shrink-0 flex flex-col justify-between animate-pulse animate-duration-750"
+                          >
+                            <div>
+                              <div className="flex items-center justify-between gap-2 mb-3">
+                                <div className="h-3 w-28 bg-white/10 rounded" />
+                                <div className="h-3 w-12 bg-white/5 rounded" />
+                              </div>
+                              <div className="space-y-2 mb-4">
+                                <div className="h-2 w-full bg-white/5 rounded" />
+                                <div className="h-2 w-3/4 bg-white/5 rounded" />
+                              </div>
+                            </div>
+                            <div className="flex items-center justify-between border-t border-white/[0.04] pt-2">
+                              <div className="h-2.5 w-16 bg-white/10 rounded" />
+                              <div className="h-2.5 w-20 bg-white/5 rounded" />
+                            </div>
+                          </div>
+                        ))
+                      ) : (
+                        (repositories.length > 0 ? repositories : [
+                          { name: "campus-bandhu-os", description: "Smart Campus Operating System with AI Matching, real-time sync, and glassmorphic dashboards.", language: "TypeScript", forks: 12, stars: 128, tag: "Highest Fork", html_url: `https://github.com/${githubUsername}/campus-bandhu-os` },
+                          { name: "ai-matching-radar", description: "Skills compatibility matching engine using cosine similarity calculations and fuzzy match logic.", language: "Python", forks: 8, stars: 242, tag: "Most Star", html_url: `https://github.com/${githubUsername}/ai-matching-radar` },
+                          { name: "web3-buildathon-contracts", description: "Smart contracts and decentralized verification logic for NFT credential distribution.", language: "Solidity", forks: 4, stars: 38, tag: "New", html_url: `https://github.com/${githubUsername}/web3-buildathon-contracts` },
+                          { name: "leetcode-stats-api", description: "Serverless endpoints to fetch, compile, and visual solve parameters for competitive coding profiles.", language: "TypeScript", forks: 2, stars: 15, tag: "", html_url: `https://github.com/${githubUsername}/leetcode-stats-api` },
+                        ]).map((repo) => (
+                          <a 
+                            key={repo.name} 
+                            href={repo.html_url || "#"}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="min-w-[260px] max-w-[260px] rounded-2xl border border-white/[0.04] bg-white/[0.01] p-4 hover:bg-white/[0.03] hover:border-purple/35 transition-all snap-align-start shrink-0 flex flex-col justify-between group/repo cursor-pointer shadow-md"
+                          >
+                            <div>
+                              <div className="flex items-center justify-between gap-2 mb-2">
+                                <span className="font-mono text-xs font-semibold text-white group-hover/repo:text-accent transition-colors truncate max-w-[150px]">{repo.name}</span>
+                                {repo.tag && (
+                                  <span className={cn(
+                                    "text-[8px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wider",
+                                    repo.tag === "New" && "bg-electric/10 text-electric border border-electric/20",
+                                    repo.tag === "Highest Fork" && "bg-purple/10 text-purple border border-purple/20 shadow-glow-xs animate-pulse",
+                                    repo.tag === "Most Star" && "bg-mint/10 text-mint border border-mint/20 shadow-glow-xs"
+                                  )}>
+                                    {repo.tag}
+                                  </span>
+                                )}
+                              </div>
+                              <p className="text-[10px] text-slate leading-relaxed line-clamp-2 mb-3">{repo.description}</p>
+                            </div>
+                            
+                            <div className="flex items-center justify-between text-[9px] text-slate border-t border-white/[0.04] pt-2 mt-2 font-mono">
+                              <span className="flex items-center gap-1.5 font-bold">
+                                <span className={cn(
+                                  "w-1.5 h-1.5 rounded-full",
+                                  repo.language === "TypeScript" && "bg-[#3178c6]",
+                                  repo.language === "Python" && "bg-[#3572a5]",
+                                  repo.language === "Solidity" && "bg-[#f18b11]",
+                                  !["TypeScript", "Python", "Solidity"].includes(repo.language) && "bg-accent"
+                                )} /> {repo.language}
+                              </span>
+                              <span className="flex items-center gap-3 font-semibold">
+                                <span>🍴 {repo.forks}</span>
+                                <span>⭐ {repo.stars}</span>
+                              </span>
+                            </div>
+                          </a>
+                        ))
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </ConsoleWindow>
+            </div>
+          )}
+
           {/* Bento Box 5: LeetCode Solving status (Col-span 1) */}
           {profile?.leetcodeUrl && (
-            <div className="md:col-span-1 lg:col-span-1 flex flex-col">
+            <div className="md:col-span-2 lg:col-span-1 flex flex-col">
               <ConsoleWindow title="[leetcode] - analytics.api" className="h-full flex flex-col justify-between">
                 <div className="space-y-4">
                   <h3 className="font-heading text-base font-bold flex items-center gap-2 text-white">
@@ -1892,7 +1894,7 @@ export default function ProfilePage() {
           )}
 
           {/* Bento Box 6: Timeline Journey logs (Col-span 2) */}
-          <div className="md:col-span-2 lg:col-span-2 flex flex-col">
+          <div className="md:col-span-2 lg:col-span-2 flex flex-col min-w-0">
             <ConsoleWindow title="[journey] - experience.log" className="h-full flex flex-col justify-between">
               <div className="grid gap-6 sm:grid-cols-2">
                 
@@ -2057,9 +2059,8 @@ export default function ProfilePage() {
               </div>
             </ConsoleWindow>
           </div>
-
           {/* Bento Box 7: Skills Directory tags cloud (Col-span 1) */}
-          <div className="md:col-span-1 lg:col-span-1 flex flex-col">
+          <div className="md:col-span-1 lg:col-span-1 flex flex-col min-w-0">
             <ConsoleWindow title="[cfg] - skills.xml" className="h-full flex flex-col justify-between">
               <div className="space-y-4">
                 <h3 className="font-heading text-base font-bold flex items-center gap-2 text-white">
@@ -2107,6 +2108,7 @@ export default function ProfilePage() {
               </div>
             </ConsoleWindow>
           </div>
+
 
         </div>
 
