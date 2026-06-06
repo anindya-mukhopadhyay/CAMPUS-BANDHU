@@ -59,7 +59,8 @@ const config: Config = {
         "scale-in": "scale-in 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)",
         "spin-slow": "spin-slow 12s linear infinite",
         holographic: "holographic 8s ease infinite",
-        "border-glow": "border-glow 3s ease-in-out infinite"
+        "border-glow": "border-glow 3s ease-in-out infinite",
+        blink: "blink 1s step-end infinite"
       },
       transitionTimingFunction: {
         spring: "cubic-bezier(0.34, 1.56, 0.64, 1)"

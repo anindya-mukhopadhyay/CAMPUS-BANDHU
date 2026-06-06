@@ -597,7 +597,7 @@ export default function ProfilePage() {
           setTimeout(() => {
             setIsEditing(false);
           }, 1200);
-        } catch (err) {
+        } catch {
           setEditWizardLines(prev => [
             ...prev,
             "❌ Database write failure. Configuration rolled back."
@@ -720,7 +720,7 @@ export default function ProfilePage() {
         ]);
         try {
           const currentProj = profile?.projects || [];
-          let updated = [...currentProj];
+          const updated = [...currentProj];
           if (projEditingIndex !== null) {
             updated[projEditingIndex] = projWizardData;
           } else {
@@ -735,7 +735,7 @@ export default function ProfilePage() {
           setTimeout(() => {
             setIsAddProjectOpen(false);
           }, 1200);
-        } catch (err) {
+        } catch {
           setProjWizardLines(prev => [
             ...prev,
             "❌ Database write failure. Transaction rolled back."
@@ -844,7 +844,7 @@ export default function ProfilePage() {
         ]);
         try {
           const currentExp = profile?.experience || [];
-          let updated = [...currentExp];
+          const updated = [...currentExp];
           if (expEditingIndex !== null) {
             updated[expEditingIndex] = expWizardData;
           } else {
@@ -859,7 +859,7 @@ export default function ProfilePage() {
           setTimeout(() => {
             setIsAddExperienceOpen(false);
           }, 1200);
-        } catch (err) {
+        } catch {
           setExpWizardLines(prev => [
             ...prev,
             "❌ Database write failure. Transaction rolled back."
@@ -972,7 +972,7 @@ export default function ProfilePage() {
         ]);
         try {
           const currentLic = profile?.licenses || [];
-          let updated = [...currentLic];
+          const updated = [...currentLic];
           if (licEditingIndex !== null) {
             updated[licEditingIndex] = licWizardData;
           } else {
@@ -987,7 +987,7 @@ export default function ProfilePage() {
           setTimeout(() => {
             setIsAddLicenseOpen(false);
           }, 1200);
-        } catch (err) {
+        } catch {
           setLicWizardLines(prev => [
             ...prev,
             "❌ Database write failure. Transaction rolled back."
